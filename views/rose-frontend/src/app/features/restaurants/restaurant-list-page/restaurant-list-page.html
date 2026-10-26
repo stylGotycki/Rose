@@ -1,0 +1,165 @@
+<section class="page restaurants-page">
+  <header class="restaurants-header">
+    <div>
+      <p class="eyebrow">Twoje restauracje</p>
+
+      <h1 class="page-title">
+        Wybierz restaurację
+      </h1>
+
+      <p class="page-subtitle">
+        Wybierz restaurację, aby przejść do jej panelu
+        zarządzania, albo utwórz nową.
+      </p>
+    </div>
+
+    <a
+      class="btn btn-primary"
+      routerLink="/app/restaurants/create"
+    >
+      Utwórz restaurację
+    </a>
+  </header>
+
+  @if (loading()) {
+    <div class="card loading-state">
+      <div class="loading-spinner"></div>
+      <p>Pobieranie restauracji...</p>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="card error-state">
+      <h2>Nie udało się pobrać danych</h2>
+      <p class="error-message">
+        {{ errorMessage() }}
+      </p>
+
+      <button
+        class="btn btn-outline"
+        type="button"
+        (click)="loadRestaurants()"
+      >
+        Spróbuj ponownie
+      </button>
+    </div>
+  } @else if (activeRestaurants().length === 0) {
+    <div class="empty-state">
+      <div class="empty-logo">
+        <img
+          src="/assets/logo.png"
+          alt="ROSE"
+        />
+      </div>
+
+      <h2>Nie masz jeszcze restauracji</h2>
+
+      <p>
+        Utwórz pierwszą restaurację, aby zacząć zarządzać
+        menu, pracownikami, grafikiem i zamówieniami.
+      </p>
+
+      <a
+        class="btn btn-primary"
+        routerLink="/app/restaurants/create"
+      >
+        Utwórz pierwszą restaurację
+      </a>
+    </div>
+  } @else {
+    <div class="restaurant-grid">
+      @for (
+        restaurant of activeRestaurants();
+        track restaurant.id
+      ) {
+        <article class="restaurant-card">
+          <div class="restaurant-card-header">
+            <div class="restaurant-logo">
+              {{ restaurant.name.charAt(0).toUpperCase() }}
+            </div>
+
+            <span class="badge">
+              Aktywna
+            </span>
+          </div>
+
+          <div class="restaurant-content">
+            <h2>{{ restaurant.name }}</h2>
+
+            <p class="restaurant-description">
+              {{
+                restaurant.description
+                  || 'Brak opisu restauracji.'
+              }}
+            </p>
+          </div>
+
+          <dl class="restaurant-details">
+            <div>
+              <dt>NIP / Tax ID</dt>
+              <dd>
+                {{ restaurant.taxId || 'Nie podano' }}
+              </dd>
+            </div>
+
+            <div>
+              <dt>Utworzono</dt>
+              <dd>
+                {{
+                  restaurant.createdAt
+                    | date: 'dd.MM.yyyy'
+                }}
+              </dd>
+            </div>
+          </dl>
+
+          <div class="restaurant-actions">
+            <a
+              class="btn btn-primary"
+              [routerLink]="[
+                '/app/restaurants',
+                restaurant.id,
+                'panel'
+              ]"
+            >
+              Przejdź do panelu
+            </a>
+
+            <a
+              class="btn btn-secondary"
+              [routerLink]="[
+                '/app/restaurants',
+                restaurant.id,
+                'edit'
+              ]"
+            >
+              Edytuj
+            </a>
+          </div>
+        </article>
+      }
+    </div>
+  }
+
+  @if (archivedRestaurants().length > 0) {
+    <section class="archived-section">
+      <h2>Archiwalne restauracje</h2>
+
+      <div class="archived-list">
+        @for (
+          restaurant of archivedRestaurants();
+          track restaurant.id
+        ) {
+          <div class="archived-item">
+            <div>
+              <strong>{{ restaurant.name }}</strong>
+              <span>{{ restaurant.taxId || 'Brak NIP' }}</span>
+            </div>
+
+            <span class="badge archived-badge">
+              Archiwalna
+            </span>
+          </div>
+        }
+      </div>
+    </section>
+  }
+</section>

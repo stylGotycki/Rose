@@ -1,0 +1,265 @@
+<section class="page members-page">
+  <header class="members-header">
+    <div>
+      <p class="eyebrow">Dostępy</p>
+
+      <h1 class="page-title">
+        Członkowie restauracji
+      </h1>
+
+      <p class="page-subtitle">
+        Zarządzaj użytkownikami posiadającymi dostęp do
+        restauracji
+        {{ restaurantContext.restaurantName() }}.
+      </p>
+    </div>
+
+    <a
+      class="btn btn-primary"
+      [routerLink]="createLink()"
+    >
+      Dodaj członka
+    </a>
+  </header>
+
+  @if (successMessage()) {
+    <div class="message-box success-box">
+      {{ successMessage() }}
+    </div>
+  }
+
+  @if (errorMessage()) {
+    <div class="message-box error-box">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  @if (currentMember(); as current) {
+    <section class="current-access-card">
+      <div class="current-access-avatar">
+        {{ roleLabel(current.role).charAt(0) }}
+      </div>
+
+      <div class="current-access-content">
+        <span>Twój dostęp</span>
+
+        <strong>
+          {{ roleLabel(current.role) }}
+        </strong>
+
+        <small>
+          ID użytkownika: {{ current.userId }}
+        </small>
+      </div>
+
+      <span class="badge">
+        {{ current.status === 'ACTIVE' ? 'Aktywny' : 'Archiwalny' }}
+      </span>
+    </section>
+  }
+
+  @if (loading()) {
+    <div class="card loading-state">
+      <div class="loading-spinner"></div>
+      <p>Pobieranie członków restauracji...</p>
+    </div>
+  } @else if (activeMembers().length === 0) {
+    <div class="empty-state">
+      <img
+        class="empty-logo"
+        src="/assets/logo.png"
+        alt="ROSE"
+      />
+
+      <h2>Brak aktywnych członków</h2>
+
+      <p>
+        Dodaj użytkownika i przypisz mu rolę w restauracji.
+      </p>
+
+      <a
+        class="btn btn-primary"
+        [routerLink]="createLink()"
+      >
+        Dodaj pierwszego członka
+      </a>
+    </div>
+  } @else {
+    <div class="card members-table-card">
+      <div class="table-wrapper">
+        <table class="table members-table">
+          <thead>
+            <tr>
+              <th>Użytkownik</th>
+              <th>Rola</th>
+              <th>Status</th>
+              <th>Dodano</th>
+              <th class="actions-column">Akcje</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (
+              member of activeMembers();
+              track member.id
+            ) {
+              <tr>
+                <td>
+                  <div class="user-cell">
+                    <div class="user-avatar">
+                      {{ roleLabel(member.role).charAt(0) }}
+                    </div>
+
+                    <div>
+                      <strong>
+                        {{ member.userId }}
+                      </strong>
+
+                      @if (isCurrentMember(member.id)) {
+                        <span class="you-label">
+                          To Ty
+                        </span>
+                      }
+
+                      <small>
+                        ID członkostwa: {{ member.id }}
+                      </small>
+                    </div>
+                  </div>
+                </td>
+
+                <td>
+                  <span
+                    class="role-badge"
+                    [class.owner-role]="member.role === 'OWNER'"
+                  >
+                    {{ roleLabel(member.role) }}
+                  </span>
+                </td>
+
+                <td>
+                  <span class="badge">
+                    Aktywny
+                  </span>
+                </td>
+
+                <td>
+                  {{
+                    member.createdAt
+                      | date: 'dd.MM.yyyy, HH:mm'
+                  }}
+                </td>
+
+                <td>
+                  <div class="row-actions">
+                    <a
+                      class="btn btn-secondary btn-small"
+                      [routerLink]="editLink(member.id)"
+                    >
+                      Zmień rolę
+                    </a>
+
+                    <button
+                      class="btn btn-outline-danger btn-small"
+                      type="button"
+                      [disabled]="isCurrentMember(member.id)"
+                      (click)="showArchiveConfirmation(member)"
+                    >
+                      Archiwizuj
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  @if (archivedMembers().length > 0) {
+    <section class="archived-section">
+      <header>
+        <h2>Archiwalne dostępy</h2>
+
+        <span>
+          {{ archivedMembers().length }}
+        </span>
+      </header>
+
+      <div class="archived-list">
+        @for (
+          member of archivedMembers();
+          track member.id
+        ) {
+          <article class="archived-item">
+            <div>
+              <strong>{{ member.userId }}</strong>
+
+              <p>
+                {{ roleLabel(member.role) }}
+              </p>
+            </div>
+
+            <span class="badge archived-badge">
+              Archiwalny
+            </span>
+          </article>
+        }
+      </div>
+    </section>
+  }
+</section>
+
+@if (memberToArchive(); as member) {
+  <div
+    class="modal-backdrop"
+    (click)="hideArchiveConfirmation()"
+  >
+    <section
+      class="confirmation-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="archive-member-title"
+      (click)="$event.stopPropagation()"
+    >
+      <p class="danger-label">
+        Potwierdzenie operacji
+      </p>
+
+      <h2 id="archive-member-title">
+        Odebrać dostęp?
+      </h2>
+
+      <p>
+        Użytkownik
+        <strong>{{ member.userId }}</strong>
+        utraci aktywny dostęp do restauracji.
+      </p>
+
+      <div class="modal-actions">
+        <button
+          class="btn btn-danger"
+          type="button"
+          [disabled]="archivingId() === member.id"
+          (click)="archiveMember()"
+        >
+          {{
+            archivingId() === member.id
+              ? 'Archiwizowanie...'
+              : 'Tak, odbierz dostęp'
+          }}
+        </button>
+
+        <button
+          class="btn btn-secondary"
+          type="button"
+          [disabled]="archivingId() === member.id"
+          (click)="hideArchiveConfirmation()"
+        >
+          Anuluj
+        </button>
+      </div>
+    </section>
+  </div>
+}

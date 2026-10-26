@@ -1,0 +1,224 @@
+<section class="page item-form-page">
+  @if (loading()) {
+    <div class="card loading-state">
+      <div class="loading-spinner"></div>
+
+      <p>Pobieranie danych pozycji...</p>
+    </div>
+  } @else if (
+    !menu() ||
+    !category() ||
+    !item()
+  ) {
+    <div class="card fatal-error">
+      <h1>Nie udało się otworzyć pozycji</h1>
+
+      <p>
+        {{ errorMessage() }}
+      </p>
+    </div>
+  } @else if (menu(); as currentMenu) {
+    @if (category(); as currentCategory) {
+      @if (item(); as currentItem) {
+        <a
+          class="back-link"
+          [routerLink]="detailsLink()"
+        >
+          ← Wróć do zawartości menu
+        </a>
+
+        <div class="form-layout">
+          <div class="form-introduction">
+            <p class="eyebrow">
+              Edycja pozycji
+            </p>
+
+            <h1 class="page-title">
+              {{ currentItem.name }}
+            </h1>
+
+            <p class="page-subtitle">
+              Kategoria:
+              <strong>
+                {{ currentCategory.name }}
+              </strong>
+            </p>
+
+            <div class="information-card">
+              <span>Menu</span>
+
+              <strong>
+                {{ currentMenu.name }}
+              </strong>
+
+              <span>Kategoria</span>
+
+              <strong>
+                {{ currentCategory.name }}
+              </strong>
+
+              <span>Status pozycji</span>
+
+              <strong>
+                {{
+                  currentItem.status === 'ACTIVE'
+                    ? 'Aktywna'
+                    : 'Archiwalna'
+                }}
+              </strong>
+            </div>
+          </div>
+
+          @if (
+            currentMenu.status === 'ARCHIVED' ||
+            currentCategory.status === 'ARCHIVED' ||
+            currentItem.status === 'ARCHIVED'
+          ) {
+            <section class="card readonly-card">
+              <h2>Pozycja jest tylko do odczytu</h2>
+
+              <p>
+                Archiwalnego menu, kategorii lub pozycji
+                nie można już edytować.
+              </p>
+
+              <a
+                class="btn btn-primary"
+                [routerLink]="detailsLink()"
+              >
+                Wróć do menu
+              </a>
+            </section>
+          } @else {
+            <form
+              class="card form item-form"
+              (ngSubmit)="submit()"
+            >
+              <div class="form-field">
+                <label for="name">
+                  Nazwa pozycji *
+                </label>
+
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  maxlength="128"
+                  required
+                  [(ngModel)]="name"
+                />
+
+                <span class="field-hint">
+                  {{ name.length }}/128
+                </span>
+              </div>
+
+              <div class="form-field">
+                <label for="description">
+                  Opis
+                </label>
+
+                <textarea
+                  id="description"
+                  name="description"
+                  rows="6"
+                  maxlength="1000"
+                  [(ngModel)]="description"
+                ></textarea>
+
+                <span class="field-hint">
+                  {{ description.length }}/1000
+                </span>
+              </div>
+
+              <div class="price-row">
+                <div class="form-field">
+                  <label for="price">
+                    Cena *
+                  </label>
+
+                  <input
+                    id="price"
+                    name="price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    required
+                    [(ngModel)]="price"
+                  />
+                </div>
+
+                <div class="form-field currency-field">
+                  <label for="currency">
+                    Waluta *
+                  </label>
+
+                  <input
+                    id="currency"
+                    name="currency"
+                    type="text"
+                    minlength="3"
+                    maxlength="3"
+                    required
+                    [(ngModel)]="currency"
+                    (blur)="normalizeCurrency()"
+                  />
+
+                  <span class="field-hint">
+                    Kod ISO, np. PLN lub EUR.
+                  </span>
+                </div>
+              </div>
+
+              <label class="availability-control">
+                <input
+                  name="available"
+                  type="checkbox"
+                  [(ngModel)]="available"
+                />
+
+                <span>
+                  <strong>
+                    Pozycja jest dostępna
+                  </strong>
+
+                  <small>
+                    Wyłączenie dostępności nie archiwizuje
+                    pozycji i można ją później ponownie włączyć.
+                  </small>
+                </span>
+              </label>
+
+              @if (errorMessage()) {
+                <div class="message-box error-box">
+                  {{ errorMessage() }}
+                </div>
+              }
+
+              <div class="form-actions">
+                <button
+                  class="btn btn-primary"
+                  type="submit"
+                  [disabled]="saving()"
+                >
+                  {{
+                    saving()
+                      ? 'Zapisywanie...'
+                      : 'Zapisz zmiany'
+                  }}
+                </button>
+
+                <a
+                  class="btn btn-secondary"
+                  [routerLink]="detailsLink()"
+                >
+                  Anuluj
+                </a>
+              </div>
+            </form>
+          }
+        </div>
+      }
+    }
+  }
+</section>

@@ -1,0 +1,144 @@
+<section class="page panel-home">
+  <header class="page-header">
+    <p class="eyebrow">
+      Panel zarządzania
+    </p>
+
+    <h1 class="page-title">
+      {{ restaurantContext.restaurantName() }}
+    </h1>
+
+    <p class="page-subtitle">
+      Wybierz obszar, którym chcesz zarządzać.
+    </p>
+  </header>
+
+  @if (
+    restaurantContext.restaurant();
+    as restaurant
+  ) {
+    <section class="restaurant-information card">
+      <div>
+        <span class="information-label">
+          Nazwa
+        </span>
+
+        <strong>{{ restaurant.name }}</strong>
+      </div>
+
+      <div>
+        <span class="information-label">
+          NIP / Tax ID
+        </span>
+
+        <strong>
+          {{ restaurant.taxId || 'Nie podano' }}
+        </strong>
+      </div>
+
+      <div>
+        <span class="information-label">
+          Status
+        </span>
+
+        <span class="badge">
+          {{
+            restaurant.status === 'ACTIVE'
+              ? 'Aktywna'
+              : 'Archiwalna'
+          }}
+        </span>
+      </div>
+    </section>
+  }
+
+  <div class="panel-grid">
+    <a
+      class="panel-card"
+      [routerLink]="panelLink('settings')"
+    >
+      <span class="panel-number">01</span>
+      <h2>Konfiguracja</h2>
+      <p>
+        Edytuj podstawowe dane restauracji.
+      </p>
+    </a>
+
+    <a
+      class="panel-card"
+      [routerLink]="panelLink('locations')"
+    >
+      <span class="panel-number">02</span>
+      <h2>Lokale</h2>
+      <p>
+        Zarządzaj fizycznymi lokalami restauracji.
+      </p>
+    </a>
+
+    <a
+      class="panel-card"
+      [routerLink]="panelLink('employees')"
+    >
+      <span class="panel-number">03</span>
+      <h2>Pracownicy</h2>
+      <p>
+        Dodawaj pracowników i edytuj ich role.
+      </p>
+    </a>
+
+    <a
+      class="panel-card"
+      [routerLink]="panelLink('schedule')"
+    >
+      <span class="panel-number">04</span>
+      <h2>Grafik</h2>
+      <p>
+        Planuj zmiany pracowników restauracji.
+      </p>
+    </a>
+
+    <a
+      class="panel-card"
+      [routerLink]="panelLink('menu')"
+    >
+      <span class="panel-number">05</span>
+      <h2>Menu</h2>
+      <p>
+        Twórz menu, kategorie oraz pozycje.
+      </p>
+    </a>
+
+    <a
+      class="panel-card"
+      [routerLink]="panelLink('orders')"
+    >
+      <span class="panel-number">06</span>
+      <h2>Zamówienia</h2>
+      <p>
+        Obsługuj zamówienia restauracji.
+      </p>
+    </a>
+
+    <a
+      class="panel-card"
+      [routerLink]="panelLink('kitchen')"
+    >
+      <span class="panel-number">07</span>
+      <h2>Kuchnia</h2>
+      <p>
+        Zarządzaj przygotowywaniem pozycji.
+      </p>
+    </a>
+
+    <a
+      class="panel-card"
+      [routerLink]="panelLink('billing')"
+    >
+      <span class="panel-number">08</span>
+      <h2>Rachunki</h2>
+      <p>
+        Przeglądaj i opłacaj rachunki.
+      </p>
+    </a>
+  </div>
+</section>

@@ -1,0 +1,428 @@
+<section class="page menu-page">
+  <header class="menu-header">
+    <div>
+      <p class="eyebrow">
+        Menu restauracji
+      </p>
+
+      <h1 class="page-title">
+        Zarządzanie menu
+      </h1>
+
+      <p class="page-subtitle">
+        Twórz wersje robocze, edytuj zawartość
+        i wybierz aktywne menu restauracji
+        {{ restaurantContext.restaurantName() }}.
+      </p>
+    </div>
+
+    <a
+      class="btn btn-primary"
+      [routerLink]="createLink()"
+    >
+      Utwórz menu
+    </a>
+  </header>
+
+  @if (successMessage()) {
+    <div class="message-box success-box">
+      {{ successMessage() }}
+    </div>
+  }
+
+  @if (errorMessage()) {
+    <div class="message-box error-box">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="card loading-state">
+      <div class="loading-spinner"></div>
+
+      <p>Pobieranie menu...</p>
+    </div>
+  } @else if (menus().length === 0) {
+    <section class="empty-state">
+      <img
+        class="empty-logo"
+        src="/assets/logo.png"
+        alt="ROSE"
+      />
+
+      <h2>Nie utworzono jeszcze menu</h2>
+
+      <p>
+        Utwórz pierwsze menu restauracji.
+        Nowe menu zostanie zapisane jako wersja robocza.
+      </p>
+
+      <a
+        class="btn btn-primary"
+        [routerLink]="createLink()"
+      >
+        Utwórz pierwsze menu
+      </a>
+    </section>
+  } @else {
+    <section class="menu-section">
+      <div class="section-heading">
+        <div>
+          <p class="section-label">
+            Menu publikowane
+          </p>
+
+          <h2>Aktywne menu</h2>
+        </div>
+
+        <span class="section-count">
+          {{ activeMenu() ? 1 : 0 }}
+        </span>
+      </div>
+
+      @if (activeMenu(); as menu) {
+        <article class="active-menu-card">
+          <div class="active-marker">
+            Aktywne
+          </div>
+
+          <div class="menu-card-content">
+            <div>
+              <h3>{{ menu.name }}</h3>
+
+              <p>
+                {{
+                  menu.description ||
+                  'Brak opisu menu.'
+                }}
+              </p>
+            </div>
+
+            <dl class="menu-metadata">
+              <div>
+                <dt>Status</dt>
+
+                <dd>
+                  <span class="status-badge status-active">
+                    {{ statusLabel(menu.status) }}
+                  </span>
+                </dd>
+              </div>
+
+              <div>
+                <dt>Utworzono</dt>
+
+                <dd>
+                  {{
+                    menu.createdAt
+                      | date: 'dd.MM.yyyy, HH:mm'
+                  }}
+                </dd>
+              </div>
+
+              <div>
+                <dt>Ostatnia aktualizacja</dt>
+
+                <dd>
+                  {{
+                    menu.updatedAt
+                      | date: 'dd.MM.yyyy, HH:mm'
+                  }}
+                </dd>
+              </div>
+            </dl>
+
+            <div class="menu-actions">
+              <a
+                class="btn btn-primary"
+                [routerLink]="detailsLink(menu.id)"
+              >
+                Zarządzaj zawartością
+              </a>
+
+              <a
+                class="btn btn-secondary"
+                [routerLink]="editLink(menu.id)"
+              >
+                Edytuj dane
+              </a>
+
+              <button
+                class="btn btn-outline-danger"
+                type="button"
+                (click)="openAction('archive', menu)"
+              >
+                Archiwizuj
+              </button>
+            </div>
+          </div>
+        </article>
+      } @else {
+        <div class="no-active-menu">
+          <div>
+            <strong>
+              Brak aktywnego menu
+            </strong>
+
+            <p>
+              Klienci nie mają obecnie dostępu
+              do opublikowanego menu.
+            </p>
+          </div>
+
+          @if (draftMenus().length > 0) {
+            <span>
+              Aktywuj jedną z wersji roboczych.
+            </span>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="menu-section">
+      <div class="section-heading">
+        <div>
+          <p class="section-label">
+            Przygotowywane menu
+          </p>
+
+          <h2>Wersje robocze</h2>
+        </div>
+
+        <span class="section-count">
+          {{ draftMenus().length }}
+        </span>
+      </div>
+
+      @if (draftMenus().length === 0) {
+        <div class="section-empty-state">
+          <p>
+            Brak wersji roboczych.
+          </p>
+
+          <a
+            class="btn btn-secondary"
+            [routerLink]="createLink()"
+          >
+            Utwórz menu
+          </a>
+        </div>
+      } @else {
+        <div class="menu-grid">
+          @for (
+            menu of draftMenus();
+            track menu.id
+          ) {
+            <article class="menu-card">
+              <header class="menu-card-header">
+                <span class="status-badge status-draft">
+                  {{ statusLabel(menu.status) }}
+                </span>
+
+                <span class="updated-at">
+                  Aktualizacja:
+                  {{
+                    menu.updatedAt
+                      | date: 'dd.MM.yyyy'
+                  }}
+                </span>
+              </header>
+
+              <div class="menu-card-body">
+                <h3>{{ menu.name }}</h3>
+
+                <p>
+                  {{
+                    menu.description ||
+                    'Brak opisu menu.'
+                  }}
+                </p>
+              </div>
+
+              <footer class="menu-card-footer">
+                <a
+                  class="btn btn-primary"
+                  [routerLink]="detailsLink(menu.id)"
+                >
+                  Zawartość
+                </a>
+
+                <button
+                  class="btn btn-secondary"
+                  type="button"
+                  (click)="openAction('activate', menu)"
+                >
+                  Aktywuj
+                </button>
+
+                <a
+                  class="btn btn-secondary"
+                  [routerLink]="editLink(menu.id)"
+                >
+                  Edytuj dane
+                </a>
+
+                <button
+                  class="btn btn-outline-danger"
+                  type="button"
+                  (click)="openAction('archive', menu)"
+                >
+                  Archiwizuj
+                </button>
+              </footer>
+            </article>
+          }
+        </div>
+      }
+    </section>
+
+    @if (archivedMenus().length > 0) {
+      <section class="menu-section archived-section">
+        <div class="section-heading">
+          <div>
+            <p class="section-label">
+              Historia
+            </p>
+
+            <h2>Archiwalne menu</h2>
+          </div>
+
+          <span class="section-count">
+            {{ archivedMenus().length }}
+          </span>
+        </div>
+
+        <div class="archived-list">
+          @for (
+            menu of archivedMenus();
+            track menu.id
+          ) {
+            <article class="archived-menu-row">
+              <div>
+                <h3>{{ menu.name }}</h3>
+
+                <p>
+                  {{
+                    menu.description ||
+                    'Brak opisu menu.'
+                  }}
+                </p>
+              </div>
+
+              <div class="archived-menu-meta">
+                <span class="status-badge status-archived">
+                  {{ statusLabel(menu.status) }}
+                </span>
+
+                <span>
+                  {{
+                    menu.updatedAt
+                      | date: 'dd.MM.yyyy, HH:mm'
+                  }}
+                </span>
+
+                <a
+                  class="btn btn-secondary"
+                  [routerLink]="detailsLink(menu.id)"
+                >
+                  Podgląd
+                </a>
+              </div>
+            </article>
+          }
+        </div>
+      </section>
+    }
+  }
+</section>
+
+@if (pendingAction(); as action) {
+  <div
+    class="modal-backdrop"
+    (click)="closeAction()"
+  >
+    <section
+      class="confirmation-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="menu-action-title"
+      (click)="$event.stopPropagation()"
+    >
+      <p
+        class="modal-label"
+        [class.activate-label]="
+          action.type === 'activate'
+        "
+        [class.archive-label]="
+          action.type === 'archive'
+        "
+      >
+        Potwierdzenie operacji
+      </p>
+
+      <h2 id="menu-action-title">
+        {{
+          action.type === 'activate'
+            ? 'Aktywować menu?'
+            : 'Zarchiwizować menu?'
+        }}
+      </h2>
+
+      @if (action.type === 'activate') {
+        <p>
+          Menu
+          <strong>
+            „{{ action.menu.name }}”
+          </strong>
+          zostanie udostępnione jako aktywne menu restauracji.
+        </p>
+      } @else {
+        <p>
+          Menu
+          <strong>
+            „{{ action.menu.name }}”
+          </strong>
+          zostanie przeniesione do archiwum.
+        </p>
+      }
+
+      <div class="modal-actions">
+        <button
+          class="btn"
+          [class.btn-primary]="
+            action.type === 'activate'
+          "
+          [class.btn-danger]="
+            action.type === 'archive'
+          "
+          type="button"
+          [disabled]="
+            processingMenuId() ===
+            action.menu.id
+          "
+          (click)="confirmAction()"
+        >
+          {{
+            processingMenuId() === action.menu.id
+              ? 'Zapisywanie...'
+              : action.type === 'activate'
+                ? 'Tak, aktywuj'
+                : 'Tak, archiwizuj'
+          }}
+        </button>
+
+        <button
+          class="btn btn-secondary"
+          type="button"
+          [disabled]="
+            processingMenuId() ===
+            action.menu.id
+          "
+          (click)="closeAction()"
+        >
+          Wróć
+        </button>
+      </div>
+    </section>
+  </div>
+}

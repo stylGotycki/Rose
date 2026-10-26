@@ -1,0 +1,145 @@
+<section class="page location-form-page">
+  <a
+    class="back-link"
+    [routerLink]="listLink()"
+  >
+    ← Wróć do lokali
+  </a>
+
+  <div class="form-layout">
+    <div class="form-introduction">
+      <p class="eyebrow">
+        Nowy lokal
+      </p>
+
+      <h1 class="page-title">
+        Dodaj lokal
+      </h1>
+
+      <p class="page-subtitle">
+        Dodaj fizyczny lokal należący do restauracji
+        {{ restaurantContext.restaurantName() }}.
+      </p>
+
+      <div class="information-card">
+        <h2>Dane lokalu</h2>
+
+        <p>
+          Podaj nazwę ułatwiającą identyfikację lokalu oraz
+          jego pełny adres.
+        </p>
+      </div>
+    </div>
+
+    <form
+      class="card form location-form"
+      (ngSubmit)="submit()"
+    >
+      <div class="form-field">
+        <label for="locationName">
+          Nazwa lokalu *
+        </label>
+
+        <input
+          id="locationName"
+          name="locationName"
+          type="text"
+          maxlength="128"
+          placeholder="np. Lokal Gdańsk Centrum"
+          [(ngModel)]="name"
+        />
+
+        <span class="field-hint">
+          {{ name.length }}/128
+        </span>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label for="city">Miasto *</label>
+
+          <input
+            id="city"
+            name="city"
+            type="text"
+            maxlength="128"
+            placeholder="np. Gdańsk"
+            [(ngModel)]="city"
+          />
+        </div>
+
+        <div class="form-field postal-code-field">
+          <label for="postalCode">
+            Kod pocztowy *
+          </label>
+
+          <input
+            id="postalCode"
+            name="postalCode"
+            type="text"
+            maxlength="16"
+            placeholder="80-001"
+            [(ngModel)]="postalCode"
+          />
+        </div>
+      </div>
+
+      <div class="form-row street-row">
+        <div class="form-field">
+          <label for="street">Ulica *</label>
+
+          <input
+            id="street"
+            name="street"
+            type="text"
+            maxlength="128"
+            placeholder="np. Długa"
+            [(ngModel)]="street"
+          />
+        </div>
+
+        <div class="form-field building-field">
+          <label for="buildingNumber">
+            Numer budynku *
+          </label>
+
+          <input
+            id="buildingNumber"
+            name="buildingNumber"
+            type="text"
+            maxlength="32"
+            placeholder="12A"
+            [(ngModel)]="buildingNumber"
+          />
+        </div>
+      </div>
+
+      @if (errorMessage()) {
+        <div class="message-box error-box">
+          {{ errorMessage() }}
+        </div>
+      }
+
+      <div class="form-actions">
+        <button
+          class="btn btn-primary"
+          type="submit"
+          [disabled]="saving()"
+        >
+          {{
+            saving()
+              ? 'Tworzenie lokalu...'
+              : 'Utwórz lokal'
+          }}
+        </button>
+
+        <a
+          class="btn btn-secondary"
+          [routerLink]="listLink()"
+        >
+          Anuluj
+        </a>
+      </div>
+    </form>
+  </div>
+</section>

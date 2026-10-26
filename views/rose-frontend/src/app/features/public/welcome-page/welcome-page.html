@@ -1,0 +1,112 @@
+<section class="welcome">
+  <div class="hero">
+    <div class="hero-content">
+      <p class="eyebrow">
+        Restaurant Operations System
+      </p>
+
+      @if (auth.currentUser(); as user) {
+        <h1>
+          Witaj ponownie, {{ user.firstName }}.
+        </h1>
+
+        <p class="hero-description">
+          Przejdź do swojego panelu, aby zarządzać
+          restauracjami, menu, pracownikami, zamówieniami
+          oraz rachunkami.
+        </p>
+      } @else {
+        <h1>
+          Witaj w ROSE — prostym systemie do obsługi
+          restauracji.
+        </h1>
+
+        <p class="hero-description">
+          Zarządzaj restauracjami, lokalami, menu, grafikiem,
+          zamówieniami, kuchnią i rachunkami z jednego panelu.
+        </p>
+      }
+
+      <div class="hero-actions">
+        @if (auth.authenticated()) {
+          <a
+            class="btn btn-primary"
+            routerLink="/app/restaurants"
+          >
+            Przejdź do panelu
+          </a>
+
+          <a
+            class="btn btn-outline"
+            routerLink="/about"
+          >
+            Dowiedz się więcej
+          </a>
+        } @else {
+          <a
+            class="btn btn-primary"
+            routerLink="/register"
+          >
+            Rozpocznij
+          </a>
+
+          <a
+            class="btn btn-outline"
+            routerLink="/login"
+          >
+            Zaloguj się
+          </a>
+        }
+      </div>
+    </div>
+
+    <div class="hero-card">
+      <img
+        src="/assets/logo.png"
+        alt="ROSE logo"
+        class="hero-logo"
+      />
+
+      <h2>ROSE</h2>
+
+      @if (auth.currentUser(); as user) {
+        <p>
+          Zalogowano jako {{ user.firstName }}
+          {{ user.lastName }}.
+        </p>
+      } @else {
+        <p>
+          Panel restauracji, pracowników i zamówień.
+        </p>
+      }
+    </div>
+  </div>
+
+  <section class="features">
+    <article class="card">
+      <h2>Restauracje</h2>
+
+      <p>
+        Twórz restauracje i przechodź do dedykowanego panelu
+        każdej z nich.
+      </p>
+    </article>
+
+    <article class="card">
+      <h2>Menu</h2>
+
+      <p>
+        Buduj menu, kategorie i pozycje dostępne dla zamówień.
+      </p>
+    </article>
+
+    <article class="card">
+      <h2>Operacje</h2>
+
+      <p>
+        Obsługuj zamówienia, kuchnię i rachunki w jednym
+        systemie.
+      </p>
+    </article>
+  </section>
+</section>

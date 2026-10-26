@@ -1,0 +1,246 @@
+<section class="page member-create-page">
+  <a
+    class="back-link"
+    [routerLink]="listLink()"
+  >
+    ← Wróć do listy dostępów
+  </a>
+
+  <div class="form-layout">
+    <div class="form-introduction">
+      <p class="eyebrow">
+        Dostęp do restauracji
+      </p>
+
+      <h1 class="page-title">
+        Nadaj dostęp
+      </h1>
+
+      <p class="page-subtitle">
+        Wyszukaj istniejącego użytkownika ROSE
+        i nadaj mu dostęp do restauracji
+        {{ restaurantContext.restaurantName() }}.
+      </p>
+
+      <div class="information-card">
+        <h2>Wymagane konto użytkownika</h2>
+
+        <p>
+          Dostęp można nadać tylko osobie, która posiada
+          aktywne konto w systemie ROSE.
+        </p>
+
+        <p>
+          Po nadaniu dostępu użytkownik otrzyma
+          powiadomienie na swój adres e-mail.
+        </p>
+      </div>
+    </div>
+
+    <form
+      class="card form member-form"
+      (ngSubmit)="submit()"
+    >
+      <section class="form-section">
+        <div class="section-heading">
+          <span>Krok 1</span>
+
+          <h2>Wybierz użytkownika</h2>
+        </div>
+
+        @if (!selectedUser()) {
+          <div class="form-field search-field">
+            <label for="userEmail">
+              Adres e-mail użytkownika
+            </label>
+
+            <div class="search-control">
+              <input
+                id="userEmail"
+                name="userEmail"
+                type="search"
+                autocomplete="off"
+                placeholder="Wpisz fragment adresu e-mail"
+                [ngModel]="emailQuery"
+                (ngModelChange)="
+                  onSearchChange($event)
+                "
+              />
+
+              @if (searching()) {
+                <div
+                  class="small-spinner"
+                  aria-label="Wyszukiwanie"
+                ></div>
+              }
+            </div>
+
+            <span class="field-hint">
+              Wyniki pojawią się automatycznie podczas pisania.
+            </span>
+          </div>
+
+          @if (searchErrorMessage()) {
+            <div class="message-box error-box">
+              {{ searchErrorMessage() }}
+            </div>
+          }
+
+          @if (
+            !searching() &&
+            emailQuery.trim() &&
+            searchResults().length === 0 &&
+            !searchErrorMessage()
+          ) {
+            <div class="no-results">
+              <strong>
+                Nie znaleziono użytkowników
+              </strong>
+
+              <p>
+                Sprawdź wpisany adres. Konto musi być aktywne.
+              </p>
+            </div>
+          }
+
+          @if (searchResults().length > 0) {
+            <div class="search-results">
+              <span class="results-label">
+                Znalezieni użytkownicy
+              </span>
+
+              @for (
+                user of searchResults();
+                track user.id
+              ) {
+                <button
+                  class="user-result"
+                  type="button"
+                  (click)="selectUser(user)"
+                >
+                  <span class="user-avatar">
+                    {{
+                      user.firstName
+                        ? user.firstName.charAt(0)
+                        : user.email.charAt(0)
+                    }}
+                  </span>
+
+                  <span class="user-data">
+                    <strong>
+                      {{ fullName(user) || 'Użytkownik ROSE' }}
+                    </strong>
+
+                    <small>
+                      {{ user.email }}
+                    </small>
+                  </span>
+
+                  <span class="select-label">
+                    Wybierz
+                  </span>
+                </button>
+              }
+            </div>
+          }
+        } @else if (selectedUser(); as user) {
+          <div class="selected-user">
+            <div class="selected-user-avatar">
+              {{
+                user.firstName
+                  ? user.firstName.charAt(0)
+                  : user.email.charAt(0)
+              }}
+            </div>
+
+            <div class="selected-user-data">
+              <span>
+                Wybrany użytkownik
+              </span>
+
+              <strong>
+                {{ fullName(user) || 'Użytkownik ROSE' }}
+              </strong>
+
+              <small>
+                {{ user.email }}
+              </small>
+            </div>
+
+            <button
+              class="change-user-button"
+              type="button"
+              (click)="clearSelectedUser()"
+            >
+              Zmień
+            </button>
+          </div>
+        }
+      </section>
+
+      <section class="form-section">
+        <div class="section-heading">
+          <span>Krok 2</span>
+
+          <h2>Wybierz rolę</h2>
+        </div>
+
+        <div class="form-field">
+          <label for="role">
+            Rola w restauracji *
+          </label>
+
+          <select
+            id="role"
+            name="role"
+            required
+            [(ngModel)]="role"
+          >
+            @for (
+              option of roleOptions;
+              track option.value
+            ) {
+              <option [value]="option.value">
+                {{ option.label }}
+              </option>
+            }
+          </select>
+
+          <span class="role-description">
+            {{ selectedRoleDescription() }}
+          </span>
+        </div>
+      </section>
+
+      @if (errorMessage()) {
+        <div class="message-box error-box">
+          {{ errorMessage() }}
+        </div>
+      }
+
+      <div class="form-actions">
+        <button
+          class="btn btn-primary"
+          type="submit"
+          [disabled]="
+            saving() ||
+            !selectedUser()
+          "
+        >
+          {{
+            saving()
+              ? 'Nadawanie dostępu...'
+              : 'Nadaj dostęp'
+          }}
+        </button>
+
+        <a
+          class="btn btn-secondary"
+          [routerLink]="listLink()"
+        >
+          Anuluj
+        </a>
+      </div>
+    </form>
+  </div>
+</section>

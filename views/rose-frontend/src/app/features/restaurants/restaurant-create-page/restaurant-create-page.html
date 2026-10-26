@@ -1,0 +1,136 @@
+<section class="page create-page">
+  <a
+    class="back-link"
+    routerLink="/app/restaurants"
+  >
+    ← Wróć do restauracji
+  </a>
+
+  <div class="create-layout">
+    <div class="create-intro">
+      <p class="eyebrow">
+        Nowa restauracja
+      </p>
+
+      <h1 class="page-title">
+        Utwórz restaurację
+      </h1>
+
+      <p class="page-subtitle">
+        Po utworzeniu restauracji przejdziesz do jej panelu,
+        w którym skonfigurujesz lokale, menu, pracowników
+        i pozostałe elementy systemu.
+      </p>
+
+      <div class="information-card">
+        <h2>Co dalej?</h2>
+
+        <ol>
+          <li>Utwórz restaurację.</li>
+          <li>Dodaj lokal lub lokale.</li>
+          <li>Skonfiguruj pracowników i dostępy.</li>
+          <li>Utwórz menu.</li>
+        </ol>
+      </div>
+    </div>
+
+    <form
+      class="card form create-form"
+      (ngSubmit)="submit()"
+    >
+      <div class="form-field">
+        <label for="name">
+          Nazwa restauracji *
+        </label>
+
+        <input
+          id="name"
+          name="name"
+          type="text"
+          maxlength="128"
+          placeholder="np. Restauracja Rose"
+          [(ngModel)]="name"
+        />
+
+        <span class="field-hint">
+          {{ name.length }}/128
+        </span>
+      </div>
+
+      <div class="form-field">
+        <label for="description">
+          Opis
+        </label>
+
+        <textarea
+          id="description"
+          name="description"
+          rows="6"
+          maxlength="1024"
+          placeholder="Krótki opis restauracji..."
+          [(ngModel)]="description"
+        ></textarea>
+
+        <span class="field-hint">
+          {{ description.length }}/1024
+        </span>
+      </div>
+
+      <div class="form-field">
+        <label for="taxId">
+          NIP / Tax ID
+        </label>
+
+        <input
+          id="taxId"
+          name="taxId"
+          type="text"
+          maxlength="32"
+          placeholder="np. 1234567890"
+          [(ngModel)]="taxId"
+        />
+
+        <span class="field-hint">
+          Pole opcjonalne
+        </span>
+      </div>
+
+      @if (errorMessage()) {
+        <div class="form-error">
+          <p class="error-message">
+            {{ errorMessage() }}
+          </p>
+        </div>
+      }
+
+      @if (loadingMessage()) {
+        <div class="processing-message">
+          <div class="small-spinner"></div>
+
+          <span>{{ loadingMessage() }}</span>
+        </div>
+      }
+
+      <div class="form-actions">
+        <button
+          class="btn btn-primary"
+          type="submit"
+          [disabled]="loading()"
+        >
+          {{
+            loading()
+              ? 'Tworzenie...'
+              : 'Utwórz restaurację'
+          }}
+        </button>
+
+        <a
+          class="btn btn-secondary"
+          routerLink="/app/restaurants"
+        >
+          Anuluj
+        </a>
+      </div>
+    </form>
+  </div>
+</section>

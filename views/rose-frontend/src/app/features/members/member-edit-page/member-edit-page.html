@@ -1,0 +1,143 @@
+<section class="page member-form-page">
+  <a
+    class="back-link"
+    [routerLink]="listLink()"
+  >
+    ← Wróć do dostępów
+  </a>
+
+  @if (loading()) {
+    <div class="card loading-state">
+      <div class="loading-spinner"></div>
+      <p>Pobieranie danych członka...</p>
+    </div>
+  } @else if (!member()) {
+    <div class="card fatal-error">
+      <h1>Nie udało się otworzyć dostępu</h1>
+
+      <p class="error-message">
+        {{ errorMessage() }}
+      </p>
+
+      <a
+        class="btn btn-primary"
+        [routerLink]="listLink()"
+      >
+        Wróć do dostępów
+      </a>
+    </div>
+  } @else if (member(); as currentMember) {
+    <div class="form-layout">
+      <div class="form-introduction">
+        <p class="eyebrow">
+          Edycja dostępu
+        </p>
+
+        <h1 class="page-title">
+          Zmień rolę
+        </h1>
+
+        <p class="page-subtitle">
+          Zmień poziom dostępu użytkownika do restauracji.
+        </p>
+
+        <div class="member-information">
+          <span>ID użytkownika</span>
+          <strong>{{ currentMember.userId }}</strong>
+
+          <span>ID członkostwa</span>
+          <strong>{{ currentMember.id }}</strong>
+        </div>
+      </div>
+
+      <form
+        class="card form member-form"
+        (ngSubmit)="submit()"
+      >
+        <div class="form-field">
+          <label for="role">
+            Rola użytkownika *
+          </label>
+
+          <select
+            id="role"
+            name="role"
+            [(ngModel)]="role"
+          >
+            @for (option of roles; track option.value) {
+              <option [value]="option.value">
+                {{ option.label }}
+              </option>
+            }
+          </select>
+        </div>
+
+        <section class="role-description">
+          @switch (role) {
+            @case ('OWNER') {
+              <strong>Właściciel</strong>
+              <p>
+                Pełny dostęp do konfiguracji i zarządzania restauracją.
+              </p>
+            }
+
+            @case ('MANAGER') {
+              <strong>Menedżer</strong>
+              <p>
+                Zarządzanie zespołem, grafikiem i operacjami.
+              </p>
+            }
+
+            @case ('CHEF') {
+              <strong>Kucharz</strong>
+              <p>
+                Dostęp do menu, zamówień i panelu kuchni.
+              </p>
+            }
+
+            @case ('WAITER') {
+              <strong>Kelner</strong>
+              <p>
+                Dostęp do zamówień i rachunków.
+              </p>
+            }
+
+            @default {
+              <strong>Pracownik</strong>
+              <p>
+                Podstawowy dostęp do panelu restauracji.
+              </p>
+            }
+          }
+        </section>
+
+        @if (errorMessage()) {
+          <div class="message-box error-box">
+            {{ errorMessage() }}
+          </div>
+        }
+
+        <div class="form-actions">
+          <button
+            class="btn btn-primary"
+            type="submit"
+            [disabled]="saving()"
+          >
+            {{
+              saving()
+                ? 'Zapisywanie...'
+                : 'Zapisz rolę'
+            }}
+          </button>
+
+          <a
+            class="btn btn-secondary"
+            [routerLink]="listLink()"
+          >
+            Anuluj
+          </a>
+        </div>
+      </form>
+    </div>
+  }
+</section>

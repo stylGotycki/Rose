@@ -1,0 +1,91 @@
+.restaurant-topbar {
+  min-height: var(--navbar-height);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+
+  padding: 16px 36px;
+
+  background: rgba(245, 242, 242, 0.95);
+  border-bottom: 1px solid var(--border-color);
+  backdrop-filter: blur(12px);
+}
+
+.topbar-eyebrow {
+  margin: 0 0 3px;
+  color: var(--muted-color);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.restaurant-topbar h1 {
+  margin: 0;
+  font-family: var(--montserrat-alt);
+  font-size: 23px;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.home-link {
+  padding: 10px 12px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.home-link:hover {
+  background: #eadfe2;
+  color: var(--primary-color);
+}
+
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 5px 12px 5px 5px;
+
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: #ffffff;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.topbar-avatar {
+  width: 32px;
+  height: 32px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+  background: var(--primary-color);
+  color: #ffffff;
+
+  font-family: var(--montserrat-alt);
+  font-weight: 900;
+}
+
+@media (max-width: 760px) {
+  .restaurant-topbar {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 18px 24px;
+  }
+
+  .topbar-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+}

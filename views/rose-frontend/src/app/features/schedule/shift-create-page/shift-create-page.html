@@ -1,0 +1,230 @@
+<section class="page shift-form-page">
+  <a
+    class="back-link"
+    [routerLink]="listLink()"
+    [queryParams]="listQueryParams()"
+  >
+    ← Wróć do kalendarza
+  </a>
+
+  <div class="form-layout">
+    <div class="form-introduction">
+      <p class="eyebrow">
+        Nowa zmiana
+      </p>
+
+      <h1 class="page-title">
+        Dodaj zmianę
+      </h1>
+
+      <p class="page-subtitle">
+        Zaplanuj datę i dokładne godziny pracy.
+      </p>
+
+      <div class="information-card">
+        <h2>Godziny zmiany</h2>
+
+        <p>
+          Godzinę można wybrać z dokładnością do 15 minut.
+          Data końcowa może być inna niż początkowa, dzięki
+          czemu możliwe jest tworzenie zmian nocnych.
+        </p>
+      </div>
+    </div>
+
+    <div>
+      @if (loadingEmployees()) {
+        <div class="card loading-state">
+          <div class="loading-spinner"></div>
+
+          <p>Pobieranie pracowników...</p>
+        </div>
+      } @else if (employees().length === 0) {
+        <div class="card no-employees-state">
+          <h2>Brak aktywnych pracowników</h2>
+
+          <p>
+            Najpierw dodaj aktywnego pracownika.
+          </p>
+
+          <a
+            class="btn btn-primary"
+            [routerLink]="employeesLink()"
+          >
+            Przejdź do pracowników
+          </a>
+        </div>
+      } @else {
+        <form
+          class="card form shift-form"
+          (ngSubmit)="submit()"
+        >
+          <div class="form-field">
+            <label for="employeeId">
+              Pracownik *
+            </label>
+
+            <select
+              id="employeeId"
+              name="employeeId"
+              required
+              [(ngModel)]="employeeId"
+            >
+              @for (
+                employee of employees();
+                track employee.id
+              ) {
+                <option [value]="employee.id">
+                  {{ employee.firstName }}
+                  {{ employee.lastName }}
+                  — {{ employee.role }}
+                </option>
+              }
+            </select>
+          </div>
+
+          <section class="datetime-card">
+            <h2>Początek zmiany</h2>
+
+            <div class="form-row">
+              <div class="form-field">
+                <label for="startDate">
+                  Data *
+                </label>
+
+                <input
+                  id="startDate"
+                  name="startDate"
+                  type="date"
+                  required
+                  [(ngModel)]="startDate"
+                  (change)="ensureValidEnd()"
+                />
+              </div>
+
+              <div class="form-field">
+                <label for="startTime">
+                  Godzina *
+                </label>
+
+                <input
+                  id="startTime"
+                  name="startTime"
+                  type="time"
+                  step="900"
+                  required
+                  [(ngModel)]="startTime"
+                  (change)="ensureValidEnd()"
+                />
+              </div>
+            </div>
+          </section>
+
+          <section class="datetime-card">
+            <h2>Koniec zmiany</h2>
+
+            <div class="form-row">
+              <div class="form-field">
+                <label for="endDate">
+                  Data *
+                </label>
+
+                <input
+                  id="endDate"
+                  name="endDate"
+                  type="date"
+                  required
+                  [(ngModel)]="endDate"
+                />
+              </div>
+
+              <div class="form-field">
+                <label for="endTime">
+                  Godzina *
+                </label>
+
+                <input
+                  id="endTime"
+                  name="endTime"
+                  type="time"
+                  step="900"
+                  required
+                  [(ngModel)]="endTime"
+                />
+              </div>
+            </div>
+          </section>
+
+          <div class="form-field">
+            <label for="position">
+              Stanowisko *
+            </label>
+
+            <select
+              id="position"
+              name="position"
+              required
+              [(ngModel)]="position"
+            >
+              @for (
+                option of positions;
+                track option.value
+              ) {
+                <option [value]="option.value">
+                  {{ option.label }}
+                </option>
+              }
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label for="note">
+              Notatka
+            </label>
+
+            <textarea
+              id="note"
+              name="note"
+              rows="5"
+              maxlength="1000"
+              placeholder="Dodatkowe informacje..."
+              [(ngModel)]="note"
+            ></textarea>
+
+            <span class="field-hint">
+              {{ note.length }}/1000
+            </span>
+          </div>
+
+          @if (errorMessage()) {
+            <div class="message-box error-box">
+              {{ errorMessage() }}
+            </div>
+          }
+
+          <div class="form-actions">
+            <button
+              class="btn btn-primary"
+              type="submit"
+              [disabled]="saving()"
+            >
+              {{
+                saving()
+                  ? 'Dodawanie...'
+                  : 'Dodaj zmianę'
+              }}
+            </button>
+
+            <a
+              class="btn btn-secondary"
+              [routerLink]="listLink()"
+              [queryParams]="listQueryParams()"
+            >
+              Anuluj
+            </a>
+          </div>
+        </form>
+      }
+    </div>
+  </div>
+</section>

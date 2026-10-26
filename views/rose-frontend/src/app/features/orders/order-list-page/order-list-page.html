@@ -1,0 +1,499 @@
+<section class="page orders-page">
+  <header class="orders-header">
+    <div>
+      <p class="eyebrow">
+        Obsługa zamówień
+      </p>
+
+      <h1 class="page-title">
+        Zamówienia
+      </h1>
+
+      <p class="page-subtitle">
+        Przeglądaj aktywne zamówienia i historię
+        restauracji
+        {{ restaurantContext.restaurantName() }}.
+      </p>
+    </div>
+
+    <a
+      class="btn btn-primary"
+      [routerLink]="cashierLink()"
+    >
+      Przejdź do kasy
+    </a>
+  </header>
+
+  <section class="order-summary">
+    <article>
+      <span>Szkice</span>
+      <strong>{{ draftCount() }}</strong>
+    </article>
+
+    <article>
+      <span>Przyjęte</span>
+      <strong>{{ submittedCount() }}</strong>
+    </article>
+
+    <article>
+      <span>W przygotowaniu</span>
+      <strong>{{ preparationCount() }}</strong>
+    </article>
+
+    <article>
+      <span>Gotowe</span>
+      <strong>{{ readyCount() }}</strong>
+    </article>
+  </section>
+
+  <section class="orders-toolbar">
+    <div class="view-switch">
+      <button
+        class="view-button"
+        type="button"
+        [class.active]="
+          viewFilter() === 'ACTIVE'
+        "
+        (click)="setViewFilter('ACTIVE')"
+      >
+        Aktywne
+        <span>{{ activeOrders().length }}</span>
+      </button>
+
+      <button
+        class="view-button"
+        type="button"
+        [class.active]="
+          viewFilter() === 'COMPLETED'
+        "
+        (click)="setViewFilter('COMPLETED')"
+      >
+        Historia
+        <span>{{ completedOrders().length }}</span>
+      </button>
+
+      <button
+        class="view-button"
+        type="button"
+        [class.active]="
+          viewFilter() === 'ALL'
+        "
+        (click)="setViewFilter('ALL')"
+      >
+        Wszystkie
+        <span>{{ orders().length }}</span>
+      </button>
+    </div>
+
+    <button
+      class="btn btn-secondary"
+      type="button"
+      [disabled]="loading()"
+      (click)="loadOrders()"
+    >
+      Odśwież
+    </button>
+  </section>
+
+  @if (successMessage()) {
+    <div class="message-box success-box">
+      {{ successMessage() }}
+    </div>
+  }
+
+  @if (errorMessage()) {
+    <div class="message-box error-box">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="card loading-state">
+      <div class="loading-spinner"></div>
+
+      <p>Pobieranie zamówień...</p>
+    </div>
+  } @else if (
+    displayedOrders().length === 0
+  ) {
+    <section class="empty-state">
+      <h2>
+        @if (viewFilter() === 'COMPLETED') {
+          Brak zakończonych zamówień
+        } @else {
+          Brak aktywnych zamówień
+        }
+      </h2>
+
+      <p>
+        @if (viewFilter() === 'COMPLETED') {
+          Zakończone zamówienia pojawią się tutaj.
+        } @else {
+          Nowe zamówienie można utworzyć w widoku kasy.
+        }
+      </p>
+
+      @if (viewFilter() !== 'COMPLETED') {
+        <a
+          class="btn btn-primary"
+          [routerLink]="cashierLink()"
+        >
+          Utwórz zamówienie
+        </a>
+      }
+    </section>
+  } @else {
+    <div class="orders-grid">
+      @for (
+        order of displayedOrders();
+        track order.id
+      ) {
+        <article class="order-card">
+          <header class="order-card-header">
+            <div>
+              <span class="order-number">
+                Zamówienie
+              </span>
+
+              <h2>
+                #{{ shortId(order.id) }}
+              </h2>
+            </div>
+
+            <span
+              class="status-badge"
+              [class.status-draft]="
+                order.status === 'DRAFT'
+              "
+              [class.status-submitted]="
+                order.status === 'SUBMITTED'
+              "
+              [class.status-preparation]="
+                order.status === 'IN_PREPARATION'
+              "
+              [class.status-ready]="
+                order.status === 'READY'
+              "
+              [class.status-completed]="
+                order.status === 'COMPLETED'
+              "
+            >
+              {{ orderStatusLabel(order.status) }}
+            </span>
+          </header>
+
+          <div class="order-card-body">
+            <dl>
+              <div>
+                <dt>Utworzono</dt>
+
+                <dd>
+                  {{
+                    order.createdAt
+                      | date: 'dd.MM.yyyy, HH:mm'
+                  }}
+                </dd>
+              </div>
+
+              <div>
+                <dt>Pozycje</dt>
+
+                <dd>
+                  {{ order.items.length }}
+                </dd>
+              </div>
+
+            </dl>
+
+            <div class="order-total">
+              <span>Razem</span>
+
+              <strong>
+                {{
+                  order.totalAmount
+                    | number: '1.2-2'
+                }}
+                {{ order.currency || '' }}
+              </strong>
+            </div>
+
+            @if (order.note) {
+              <div class="order-note">
+                {{ order.note }}
+              </div>
+            }
+          </div>
+
+          <footer class="order-card-footer">
+            <button
+              class="btn btn-secondary"
+              type="button"
+              (click)="openDetails(order)"
+            >
+              Szczegóły
+            </button>
+
+            @if (order.status === 'DRAFT') {
+              <a
+                class="btn btn-primary"
+                [routerLink]="cashierLink()"
+                [queryParams]="
+                  resumeOrderQueryParams(order.id)
+                "
+              >
+                Kontynuuj w kasie
+              </a>
+            }
+
+            @if (order.status === 'READY') {
+              <button
+                class="btn btn-complete"
+                type="button"
+                (click)="
+                  openCompleteConfirmation(order)
+                "
+              >
+                Zakończ zamówienie
+              </button>
+            }
+          </footer>
+        </article>
+      }
+    </div>
+  }
+</section>
+
+@if (selectedOrder(); as order) {
+  <div
+    class="modal-backdrop"
+    (click)="closeDetails()"
+  >
+    <section
+      class="order-details-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="order-details-title"
+      (click)="$event.stopPropagation()"
+    >
+      <header class="modal-header">
+        <div>
+          <p class="modal-label">
+            Szczegóły zamówienia
+          </p>
+
+          <h2 id="order-details-title">
+            #{{ shortId(order.id) }}
+          </h2>
+        </div>
+
+        <button
+          class="close-button"
+          type="button"
+          aria-label="Zamknij"
+          (click)="closeDetails()"
+        >
+          ×
+        </button>
+      </header>
+
+      <div class="modal-order-meta">
+        <span
+          class="status-badge"
+          [class.status-draft]="
+            order.status === 'DRAFT'
+          "
+          [class.status-submitted]="
+            order.status === 'SUBMITTED'
+          "
+          [class.status-preparation]="
+            order.status === 'IN_PREPARATION'
+          "
+          [class.status-ready]="
+            order.status === 'READY'
+          "
+          [class.status-completed]="
+            order.status === 'COMPLETED'
+          "
+        >
+          {{ orderStatusLabel(order.status) }}
+        </span>
+
+        <span>
+          {{
+            order.createdAt
+              | date: 'dd.MM.yyyy, HH:mm'
+          }}
+        </span>
+      </div>
+
+      @if (order.note) {
+        <div class="modal-order-note">
+          <strong>Notatka do zamówienia</strong>
+          <p>{{ order.note }}</p>
+        </div>
+      }
+
+      <div class="order-items">
+        @for (
+          item of order.items;
+          track item.id
+        ) {
+          <article class="order-item-row">
+            <div class="item-main">
+              <strong>
+                {{ item.quantity }} × {{ item.name }}
+              </strong>
+
+              @if (item.note) {
+                <p>{{ item.note }}</p>
+              }
+            </div>
+
+            <div class="item-status-column">
+              <span
+                class="item-status"
+                [class.item-pending]="
+                  item.status === 'PENDING'
+                "
+                [class.item-preparation]="
+                  item.status === 'IN_PREPARATION'
+                "
+                [class.item-ready]="
+                  item.status === 'READY'
+                "
+                [class.item-served]="
+                  item.status === 'SERVED'
+                "
+              >
+                {{ itemStatusLabel(item.status) }}
+              </span>
+            </div>
+
+            <div class="item-price-column">
+              <span>
+                {{
+                  item.unitPrice
+                    | number: '1.2-2'
+                }}
+                {{ item.currency }}
+              </span>
+
+              <strong>
+                {{
+                  item.totalPrice
+                    | number: '1.2-2'
+                }}
+                {{ item.currency }}
+              </strong>
+            </div>
+          </article>
+        }
+      </div>
+
+      <div class="modal-total">
+        <span>Razem</span>
+
+        <strong>
+          {{
+            order.totalAmount
+              | number: '1.2-2'
+          }}
+          {{ order.currency || '' }}
+        </strong>
+      </div>
+
+      <div class="modal-actions">
+        @if (order.status === 'DRAFT') {
+          <a
+            class="btn btn-primary"
+            [routerLink]="cashierLink()"
+            [queryParams]="
+              resumeOrderQueryParams(order.id)
+            "
+          >
+            Kontynuuj w kasie
+          </a>
+        }
+
+        @if (order.status === 'READY') {
+          <button
+            class="btn btn-complete"
+            type="button"
+            (click)="
+              openCompleteConfirmation(order)
+            "
+          >
+            Zakończ zamówienie
+          </button>
+        }
+
+        <button
+          class="btn btn-secondary"
+          type="button"
+          (click)="closeDetails()"
+        >
+          Zamknij
+        </button>
+      </div>
+    </section>
+  </div>
+}
+
+@if (orderToComplete(); as order) {
+  <div
+    class="modal-backdrop action-backdrop"
+    (click)="closeCompleteConfirmation()"
+  >
+    <section
+      class="confirmation-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="complete-order-title"
+      (click)="$event.stopPropagation()"
+    >
+      <p class="modal-label complete-label">
+        Zakończenie zamówienia
+      </p>
+
+      <h2 id="complete-order-title">
+        Zakończyć zamówienie?
+      </h2>
+
+      <p>
+        Zamówienie
+        <strong>
+          #{{ shortId(order.id) }}
+        </strong>
+        zostanie przeniesione do historii.
+      </p>
+
+      <div class="modal-actions">
+        <button
+          class="btn btn-complete"
+          type="button"
+          [disabled]="
+            completingOrderId() === order.id
+          "
+          (click)="confirmComplete()"
+        >
+          {{
+            completingOrderId() === order.id
+              ? 'Zapisywanie...'
+              : 'Tak, zakończ'
+          }}
+        </button>
+
+        <button
+          class="btn btn-secondary"
+          type="button"
+          [disabled]="
+            completingOrderId() === order.id
+          "
+          (click)="closeCompleteConfirmation()"
+        >
+          Wróć
+        </button>
+      </div>
+    </section>
+  </div>
+}

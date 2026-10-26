@@ -1,0 +1,84 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-bills-table
+      author: Filip Domaszk
+      changes:
+        - createTable:
+            tableName: bills
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_bills
+                    nullable: false
+
+              - column:
+                  name: order_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: restaurant_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: status
+                  type: VARCHAR(32)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: total_amount
+                  type: DECIMAL(12, 2)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: currency
+                  type: VARCHAR(3)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: paid_at
+                  type: TIMESTAMP WITH TIME ZONE
+
+        - addUniqueConstraint:
+            tableName: bills
+            columnNames: order_id
+            constraintName: uq_bills_order_id
+
+        - createIndex:
+            tableName: bills
+            indexName: idx_bills_restaurant_status
+            columns:
+              - column:
+                  name: restaurant_id
+              - column:
+                  name: status
+
+        - createIndex:
+            tableName: bills
+            indexName: idx_bills_restaurant_created_at
+            columns:
+              - column:
+                  name: restaurant_id
+              - column:
+                  name: created_at

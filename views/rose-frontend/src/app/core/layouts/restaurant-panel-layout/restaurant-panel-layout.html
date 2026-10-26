@@ -1,0 +1,36 @@
+@if (restaurantContext.loading()) {
+  <div class="panel-loading">
+    <div class="loading-spinner"></div>
+    <p>Ładowanie panelu restauracji...</p>
+  </div>
+} @else if (restaurantContext.errorMessage()) {
+  <div class="panel-error">
+    <div class="card">
+      <h1>Nie udało się otworzyć panelu</h1>
+
+      <p class="error-message">
+        {{ restaurantContext.errorMessage() }}
+      </p>
+
+      <button
+        class="btn btn-primary"
+        type="button"
+        (click)="backToRestaurants()"
+      >
+        Wróć do restauracji
+      </button>
+    </div>
+  </div>
+} @else if (restaurantContext.restaurant()) {
+  <div class="panel-layout">
+    <app-restaurant-sidebar></app-restaurant-sidebar>
+
+    <div class="panel-main">
+      <app-restaurant-topbar></app-restaurant-topbar>
+
+      <main class="panel-content">
+        <router-outlet></router-outlet>
+      </main>
+    </div>
+  </div>
+}

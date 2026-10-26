@@ -1,0 +1,86 @@
+databaseChangeLog:
+  - changeSet:
+      id: 008-create-locations-table
+      author: Filip Domaszk
+      changes:
+        - createTable:
+            tableName: locations
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: restaurant_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: name
+                  type: varchar(128)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: city
+                  type: varchar(128)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: street
+                  type: varchar(128)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: building_number
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: postal_code
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: status
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: archived_at
+                  type: timestamp
+
+        - createIndex:
+            tableName: locations
+            indexName: idx_locations_restaurant_id
+            columns:
+              - column:
+                  name: restaurant_id
+
+        - createIndex:
+            tableName: locations
+            indexName: idx_locations_status
+            columns:
+              - column:
+                  name: status

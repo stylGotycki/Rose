@@ -1,0 +1,97 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-create-order-items-table
+      author: Filip Domaszk
+      changes:
+        - createTable:
+            tableName: order_items
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_order_items
+                    nullable: false
+
+              - column:
+                  name: order_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: menu_item_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: name
+                  type: VARCHAR(128)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: unit_price
+                  type: DECIMAL(12, 2)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: currency
+                  type: VARCHAR(3)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: quantity
+                  type: INTEGER
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: status
+                  type: VARCHAR(32)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: note
+                  type: VARCHAR(512)
+
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: order_items
+            baseColumnNames: order_id
+            referencedTableName: orders
+            referencedColumnNames: id
+            constraintName: fk_order_items_order
+            onDelete: CASCADE
+
+        - createIndex:
+            tableName: order_items
+            indexName: idx_order_items_order_status
+            columns:
+              - column:
+                  name: order_id
+              - column:
+                  name: status
+
+        - createIndex:
+            tableName: order_items
+            indexName: idx_order_items_menu_item
+            columns:
+              - column:
+                  name: menu_item_id

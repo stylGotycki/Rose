@@ -1,0 +1,149 @@
+.public-navbar {
+  min-height: var(--navbar-height);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+
+  padding: 12px 48px;
+
+  background: rgba(245, 242, 242, 0.94);
+  border-bottom: 1px solid var(--border-color);
+  backdrop-filter: blur(12px);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.brand-logo {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+}
+
+.brand-name {
+  font-family: var(--montserrat-alt);
+  font-size: 24px;
+  font-weight: 900;
+  color: var(--primary-color);
+  letter-spacing: 0.04em;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.nav-links a {
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+  background: #eadfe2;
+  color: var(--primary-color);
+}
+
+.register-link,
+.panel-link {
+  background: var(--primary-color) !important;
+  color: #ffffff !important;
+}
+
+.register-link:hover,
+.panel-link:hover {
+  background: var(--primary-dark) !important;
+}
+
+.user-summary {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  margin-left: 6px;
+  padding: 5px 12px 5px 5px;
+
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: #ffffff;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.user-avatar {
+  width: 34px;
+  height: 34px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+  background: var(--primary-color);
+  color: #ffffff;
+
+  font-family: var(--montserrat-alt);
+  font-weight: 900;
+}
+
+.logout-button {
+  padding: 10px 14px;
+
+  border: none;
+  border-radius: 999px;
+
+  background: transparent;
+  color: var(--muted-color);
+
+  font-weight: 700;
+}
+
+.logout-button:hover {
+  background: #eadfe2;
+  color: var(--primary-color);
+}
+
+@media (max-width: 900px) {
+  .public-navbar {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 16px 24px;
+  }
+
+  .nav-links {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 620px) {
+  .nav-links {
+    width: 100%;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .nav-links a,
+  .logout-button {
+    width: 100%;
+    text-align: left;
+  }
+
+  .user-summary {
+    width: 100%;
+    border-radius: 14px;
+  }
+}

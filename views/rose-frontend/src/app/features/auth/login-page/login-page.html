@@ -1,0 +1,54 @@
+<section class="auth-page">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <img src="assets/logo.png" alt="ROSE logo" />
+      <div>
+        <h1>ROSE</h1>
+        <p>System obsługi restauracji</p>
+      </div>
+    </div>
+
+    <header class="auth-header">
+      <h2>Logowanie</h2>
+      <p>Zaloguj się do swojego panelu.</p>
+    </header>
+
+    <form class="form" (ngSubmit)="submit()">
+      <div class="form-field">
+        <label for="email">Email</label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          autocomplete="email"
+          [(ngModel)]="email"
+        />
+      </div>
+
+      <div class="form-field">
+        <label for="password">Hasło</label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          [(ngModel)]="password"
+        />
+      </div>
+
+      @if (errorMessage()) {
+        <p class="error-message">{{ errorMessage() }}</p>
+      }
+
+      <button class="btn btn-primary" type="submit" [disabled]="loading()">
+        {{ loading() ? 'Logowanie...' : 'Zaloguj' }}
+      </button>
+    </form>
+
+    <div class="auth-links">
+      <a routerLink="/forgot-password">Nie pamiętasz hasła?</a>
+      <span>·</span>
+      <a routerLink="/register">Utwórz konto</a>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,8 @@
+.app-layout {
+  min-height: 100vh;
+  background: var(--bg-color);
+}
+
+.app-main {
+  min-height: calc(100vh - var(--navbar-height));
+}

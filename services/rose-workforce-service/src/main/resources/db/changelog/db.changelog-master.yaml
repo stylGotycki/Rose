@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/001-create-employees-table.yaml
+
+  - include:
+      file: db/changelog/002-create-schedule-shifts-table.yaml
+
+  - include:
+      file: db/changelog/003-create-restaurant-access-projection.yaml
+
+  - include:
+      file: db/changelog/004-create-inbox-messages-table.yaml
+
+  - include:
+      file: db/changelog/005-create-outbox-events-table.yaml

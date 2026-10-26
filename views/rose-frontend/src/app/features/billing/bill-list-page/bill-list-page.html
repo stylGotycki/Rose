@@ -1,0 +1,691 @@
+<section class="page bills-page">
+  <header class="bills-header">
+    <div>
+      <p class="eyebrow">
+        Rozliczenia
+      </p>
+
+      <h1 class="page-title">
+        Rachunki
+      </h1>
+
+      <p class="page-subtitle">
+        Przeglądaj otwarte rachunki i historię płatności
+        restauracji
+        {{ restaurantContext.restaurantName() }}.
+      </p>
+    </div>
+
+    <button
+      class="btn btn-secondary"
+      type="button"
+      [disabled]="
+        loading() ||
+        refreshing()
+      "
+      (click)="loadBills(false)"
+    >
+      {{
+        refreshing()
+          ? 'Odświeżanie...'
+          : 'Odśwież rachunki'
+      }}
+    </button>
+  </header>
+
+  <section class="billing-summary">
+    <article>
+      <span>Do zapłaty</span>
+
+      <strong>
+        {{ openBills().length }}
+      </strong>
+    </article>
+
+    <article>
+      <span>Opłacone</span>
+
+      <strong>
+        {{ paidBills().length }}
+      </strong>
+    </article>
+
+    <article>
+      <span>Opłacone dzisiaj</span>
+
+      <strong>
+        {{ paidTodayCount() }}
+      </strong>
+    </article>
+
+    <article>
+      <span>Wszystkie rachunki</span>
+
+      <strong>
+        {{ totalBillCount() }}
+      </strong>
+    </article>
+  </section>
+
+  <section class="billing-toolbar">
+    <div class="view-switch">
+      <button
+        class="view-button"
+        type="button"
+        [class.active]="
+          viewFilter() === 'OPEN'
+        "
+        (click)="setViewFilter('OPEN')"
+      >
+        Do zapłaty
+
+        <span>
+          {{ openBills().length }}
+        </span>
+      </button>
+
+      <button
+        class="view-button"
+        type="button"
+        [class.active]="
+          viewFilter() === 'PAID'
+        "
+        (click)="setViewFilter('PAID')"
+      >
+        Opłacone
+
+        <span>
+          {{ paidBills().length }}
+        </span>
+      </button>
+
+      <button
+        class="view-button"
+        type="button"
+        [class.active]="
+          viewFilter() === 'ALL'
+        "
+        (click)="setViewFilter('ALL')"
+      >
+        Wszystkie
+
+        <span>
+          {{ totalBillCount() }}
+        </span>
+      </button>
+    </div>
+
+    <div class="search-field">
+      <label for="billSearch">
+        Wyszukaj rachunek
+      </label>
+
+      <div class="search-control">
+        <input
+          id="billSearch"
+          name="billSearch"
+          type="search"
+          placeholder="ID rachunku lub zamówienia"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="
+            setSearchQuery($event)
+          "
+        />
+
+        @if (searchQuery()) {
+          <button
+            type="button"
+            aria-label="Wyczyść wyszukiwanie"
+            (click)="clearSearch()"
+          >
+            ×
+          </button>
+        }
+      </div>
+    </div>
+  </section>
+
+  @if (successMessage()) {
+    <div class="message-box success-box">
+      {{ successMessage() }}
+    </div>
+  }
+
+  @if (errorMessage()) {
+    <div class="message-box error-box">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="card loading-state">
+      <div class="loading-spinner"></div>
+
+      <p>Pobieranie rachunków...</p>
+    </div>
+  } @else if (
+    displayedBills().length === 0
+  ) {
+    <section class="empty-state">
+      <h2>
+        @if (searchQuery()) {
+          Brak pasujących rachunków
+        } @else if (
+          viewFilter() === 'OPEN'
+        ) {
+          Brak rachunków do zapłaty
+        } @else if (
+          viewFilter() === 'PAID'
+        ) {
+          Brak opłaconych rachunków
+        } @else {
+          Brak rachunków
+        }
+      </h2>
+
+      <p>
+        @if (searchQuery()) {
+          Zmień wpisany identyfikator albo wyczyść
+          wyszukiwanie.
+        } @else if (
+          viewFilter() === 'OPEN'
+        ) {
+          Nowy rachunek pojawi się po zakończeniu zamówienia.
+        } @else {
+          Historia rachunków pojawi się tutaj
+          po obsłużeniu płatności.
+        }
+      </p>
+
+      @if (searchQuery()) {
+        <button
+          class="btn btn-secondary"
+          type="button"
+          (click)="clearSearch()"
+        >
+          Wyczyść wyszukiwanie
+        </button>
+      }
+    </section>
+  } @else {
+    <section class="card bills-table-card">
+      <div class="table-summary">
+        <div>
+          <strong>
+            Rachunki:
+            {{ displayedBills().length }}
+          </strong>
+
+          <span>
+            {{
+              viewFilter() === 'OPEN'
+                ? 'Oczekujące na płatność'
+                : viewFilter() === 'PAID'
+                  ? 'Historia płatności'
+                  : 'Wszystkie rachunki'
+            }}
+          </span>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="table bills-table">
+          <thead>
+            <tr>
+              <th>Rachunek</th>
+              <th>Zamówienie</th>
+              <th>Status</th>
+              <th>Utworzono</th>
+              <th>Opłacono</th>
+              <th>Kwota</th>
+              <th>Akcje</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (
+              bill of displayedBills();
+              track bill.id
+            ) {
+              <tr>
+                <td>
+                  <div class="identifier-cell">
+                    <span>Rachunek</span>
+
+                    <strong>
+                      #{{ shortId(bill.id) }}
+                    </strong>
+                  </div>
+                </td>
+
+                <td>
+                  <div class="identifier-cell order-identifier">
+                    <span>Zamówienie</span>
+
+                    <strong>
+                      #{{ shortId(bill.orderId) }}
+                    </strong>
+                  </div>
+                </td>
+
+                <td>
+                  <span
+                    class="status-badge"
+                    [class.status-open]="
+                      bill.status === 'OPEN'
+                    "
+                    [class.status-paid]="
+                      bill.status === 'PAID'
+                    "
+                  >
+                    {{ statusLabel(bill.status) }}
+                  </span>
+                </td>
+
+                <td>
+                  <span class="date-cell">
+                    {{
+                      bill.createdAt
+                        | date: 'dd.MM.yyyy'
+                    }}
+
+                    <small>
+                      {{
+                        bill.createdAt
+                          | date: 'HH:mm'
+                      }}
+                    </small>
+                  </span>
+                </td>
+
+                <td>
+                  @if (bill.paidAt) {
+                    <span class="date-cell">
+                      {{
+                        bill.paidAt
+                          | date: 'dd.MM.yyyy'
+                      }}
+
+                      <small>
+                        {{
+                          bill.paidAt
+                            | date: 'HH:mm'
+                        }}
+                      </small>
+                    </span>
+                  } @else {
+                    <span class="not-paid">
+                      —
+                    </span>
+                  }
+                </td>
+
+                <td>
+                  <strong class="amount-cell">
+                    {{
+                      bill.totalAmount
+                        | number: '1.2-2'
+                    }}
+                    {{ bill.currency }}
+                  </strong>
+                </td>
+
+                <td>
+                  <div class="row-actions">
+                    <button
+                      class="btn btn-secondary btn-small"
+                      type="button"
+                      (click)="openDetails(bill)"
+                    >
+                      Szczegóły
+                    </button>
+
+                    @if (bill.status === 'OPEN') {
+                      <button
+                        class="btn btn-primary btn-small"
+                        type="button"
+                        (click)="
+                          openPayConfirmation(bill)
+                        "
+                      >
+                        Oznacz jako opłacony
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+</section>
+
+@if (selectedBill(); as bill) {
+  <div
+    class="modal-backdrop"
+    (click)="closeDetails()"
+  >
+    <section
+      class="bill-details-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="bill-details-title"
+      (click)="$event.stopPropagation()"
+    >
+      <header class="modal-header">
+        <div>
+          <p class="modal-label">
+            Szczegóły rachunku
+          </p>
+
+          <h2 id="bill-details-title">
+            #{{ shortId(bill.id) }}
+          </h2>
+        </div>
+
+        <button
+          class="close-button"
+          type="button"
+          aria-label="Zamknij"
+          [disabled]="detailsLoading()"
+          (click)="closeDetails()"
+        >
+          ×
+        </button>
+      </header>
+
+      <div class="bill-heading">
+        <span
+          class="status-badge"
+          [class.status-open]="
+            bill.status === 'OPEN'
+          "
+          [class.status-paid]="
+            bill.status === 'PAID'
+          "
+        >
+          {{ statusLabel(bill.status) }}
+        </span>
+
+        <strong>
+          {{
+            bill.totalAmount
+              | number: '1.2-2'
+          }}
+          {{ bill.currency }}
+        </strong>
+      </div>
+
+      <dl class="bill-metadata">
+        <div>
+          <dt>ID zamówienia</dt>
+
+          <dd>
+            #{{ shortId(bill.orderId) }}
+          </dd>
+        </div>
+
+        <div>
+          <dt>Data utworzenia</dt>
+
+          <dd>
+            {{
+              bill.createdAt
+                | date: 'dd.MM.yyyy, HH:mm'
+            }}
+          </dd>
+        </div>
+
+        <div>
+          <dt>Ostatnia aktualizacja</dt>
+
+          <dd>
+            {{
+              bill.updatedAt
+                | date: 'dd.MM.yyyy, HH:mm'
+            }}
+          </dd>
+        </div>
+
+        <div>
+          <dt>Data płatności</dt>
+
+          <dd>
+            @if (bill.paidAt) {
+              {{
+                bill.paidAt
+                  | date: 'dd.MM.yyyy, HH:mm'
+              }}
+            } @else {
+              Rachunek nie został jeszcze opłacony
+            }
+          </dd>
+        </div>
+      </dl>
+
+      @if (detailsLoading()) {
+        <div class="details-loading">
+          <div class="loading-spinner small-spinner"></div>
+
+          <span>
+            Pobieranie pozycji zamówienia...
+          </span>
+        </div>
+      } @else {
+        @if (detailsErrorMessage()) {
+          <div class="details-warning">
+            {{ detailsErrorMessage() }}
+          </div>
+        }
+
+        @if (selectedOrder(); as order) {
+          <section class="order-details">
+            <div class="order-details-heading">
+              <div>
+                <span>Zamówienie</span>
+
+                <strong>
+                  #{{ shortId(order.id) }}
+                </strong>
+              </div>
+
+              <div>
+                <span>Liczba sztuk</span>
+
+                <strong>
+                  {{ totalQuantity(order) }}
+                </strong>
+              </div>
+            </div>
+
+            @if (order.note) {
+              <div class="order-note">
+                <strong>
+                  Notatka do zamówienia
+                </strong>
+
+                <p>
+                  {{ order.note }}
+                </p>
+              </div>
+            }
+
+            <div class="bill-items">
+              @for (
+                item of order.items;
+                track item.id
+              ) {
+                <article class="bill-item-row">
+                  <div>
+                    <strong>
+                      {{ item.quantity }} × {{ item.name }}
+                    </strong>
+
+                    @if (item.note) {
+                      <p>
+                        {{ item.note }}
+                      </p>
+                    }
+                  </div>
+
+                  <div class="bill-item-prices">
+                    <span>
+                      {{
+                        item.unitPrice
+                          | number: '1.2-2'
+                      }}
+                      {{ item.currency }}
+                      / szt.
+                    </span>
+
+                    <strong>
+                      {{
+                        item.totalPrice
+                          | number: '1.2-2'
+                      }}
+                      {{ item.currency }}
+                    </strong>
+                  </div>
+                </article>
+              }
+            </div>
+
+            <div class="details-total">
+              <span>Razem</span>
+
+              <strong>
+                {{
+                  bill.totalAmount
+                    | number: '1.2-2'
+                }}
+                {{ bill.currency }}
+              </strong>
+            </div>
+          </section>
+        }
+      }
+
+      <div class="modal-actions">
+        @if (bill.status === 'OPEN') {
+          <button
+            class="btn btn-primary"
+            type="button"
+            (click)="
+              openPayConfirmation(bill)
+            "
+          >
+            Oznacz jako opłacony
+          </button>
+        }
+
+        <button
+          class="btn btn-secondary"
+          type="button"
+          [disabled]="detailsLoading()"
+          (click)="closeDetails()"
+        >
+          Zamknij
+        </button>
+      </div>
+    </section>
+  </div>
+}
+
+@if (billToPay(); as bill) {
+  <div
+    class="modal-backdrop action-backdrop"
+    (click)="closePayConfirmation()"
+  >
+    <section
+      class="confirmation-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="payment-confirmation-title"
+      (click)="$event.stopPropagation()"
+    >
+      <p class="modal-label payment-label">
+        Potwierdzenie płatności
+      </p>
+
+      <h2 id="payment-confirmation-title">
+        Oznaczyć rachunek jako opłacony?
+      </h2>
+
+      <p>
+        Rachunek
+        <strong>
+          #{{ shortId(bill.id) }}
+        </strong>
+        na kwotę
+        <strong>
+          {{
+            bill.totalAmount
+              | number: '1.2-2'
+          }}
+          {{ bill.currency }}
+        </strong>
+        zostanie zamknięty jako opłacony.
+      </p>
+
+      <div class="payment-summary">
+        <div>
+          <span>Rachunek</span>
+
+          <strong>
+            #{{ shortId(bill.id) }}
+          </strong>
+        </div>
+
+        <div>
+          <span>Zamówienie</span>
+
+          <strong>
+            #{{ shortId(bill.orderId) }}
+          </strong>
+        </div>
+
+        <div>
+          <span>Kwota</span>
+
+          <strong>
+            {{
+              bill.totalAmount
+                | number: '1.2-2'
+            }}
+            {{ bill.currency }}
+          </strong>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button
+          class="btn btn-primary"
+          type="button"
+          [disabled]="
+            payingBillId() === bill.id
+          "
+          (click)="confirmPayment()"
+        >
+          {{
+            payingBillId() === bill.id
+              ? 'Zapisywanie płatności...'
+              : 'Tak, oznacz jako opłacony'
+          }}
+        </button>
+
+        <button
+          class="btn btn-secondary"
+          type="button"
+          [disabled]="
+            payingBillId() === bill.id
+          "
+          (click)="closePayConfirmation()"
+        >
+          Wróć
+        </button>
+      </div>
+    </section>
+  </div>
+}

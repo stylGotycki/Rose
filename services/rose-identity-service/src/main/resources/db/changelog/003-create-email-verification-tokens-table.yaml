@@ -1,0 +1,65 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-create-email-verification-tokens-table
+      author: Filip Domaszk
+      changes:
+        - createTable:
+            tableName: email_verification_tokens
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_email_verification_tokens
+                    nullable: false
+
+              - column:
+                  name: user_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: token_hash
+                  type: VARCHAR(128)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: expires_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: used_at
+                  type: TIMESTAMP WITH TIME ZONE
+
+        - createIndex:
+            tableName: email_verification_tokens
+            indexName: idx_email_verification_tokens_token_hash
+            columns:
+              - column:
+                  name: token_hash
+
+        - createIndex:
+            tableName: email_verification_tokens
+            indexName: idx_email_verification_tokens_user_id
+            columns:
+              - column:
+                  name: user_id
+
+        - addForeignKeyConstraint:
+            baseTableName: email_verification_tokens
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_email_verification_tokens_user
+            onDelete: CASCADE

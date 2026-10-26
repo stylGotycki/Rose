@@ -1,0 +1,924 @@
+<section class="page schedule-page">
+  <header class="schedule-header">
+    <div>
+      <p class="eyebrow">Grafik</p>
+
+      <h1 class="page-title">
+        Kalendarz pracowników
+      </h1>
+
+      <p class="page-subtitle">
+        Tygodniowy grafik restauracji
+        {{ restaurantContext.restaurantName() }}.
+        Filtruj zmiany według pracownika, stanowiska
+        i statusu.
+      </p>
+    </div>
+
+    <a
+      class="btn btn-primary"
+      [routerLink]="createLink()"
+      [queryParams]="weekQueryParams()"
+    >
+      Dodaj zmianę
+    </a>
+  </header>
+
+  <section class="calendar-toolbar">
+    <div class="week-navigation">
+      <button
+        class="navigation-button"
+        type="button"
+        aria-label="Poprzedni tydzień"
+        (click)="previousWeek()"
+      >
+        ←
+      </button>
+
+      <button
+        class="btn btn-secondary"
+        type="button"
+        (click)="goToCurrentWeek()"
+      >
+        Dzisiaj
+      </button>
+
+      <button
+        class="navigation-button"
+        type="button"
+        aria-label="Następny tydzień"
+        (click)="nextWeek()"
+      >
+        →
+      </button>
+
+      <h2>{{ weekLabel() }}</h2>
+    </div>
+
+    <div class="view-switch">
+      <button
+        class="view-button"
+        type="button"
+        [class.active]="
+          viewMode() === 'calendar'
+        "
+        (click)="setViewMode('calendar')"
+      >
+        Kalendarz
+      </button>
+
+      <button
+        class="view-button"
+        type="button"
+        [class.active]="
+          viewMode() === 'list'
+        "
+        (click)="setViewMode('list')"
+      >
+        Lista
+      </button>
+    </div>
+  </section>
+
+  <section class="scope-filter-toolbar">
+    <div class="filter-description">
+      <strong>Zakres grafiku</strong>
+
+      <span>
+        Wybierz pracownika lub stanowisko.
+        Filtry można ze sobą łączyć.
+      </span>
+    </div>
+
+    <div class="scope-filters">
+      <div class="scope-field">
+        <label for="employeeFilter">
+          Pracownik
+        </label>
+
+        <select
+          id="employeeFilter"
+          name="employeeFilter"
+          [ngModel]="selectedEmployeeId()"
+          (ngModelChange)="
+            changeEmployeeFilter($event)
+          "
+        >
+          <option value="ALL">
+            Wszyscy pracownicy
+          </option>
+
+          @for (
+            employee of sortedEmployees();
+            track employee.id
+          ) {
+            <option [value]="employee.id">
+              {{ employee.firstName }}
+              {{ employee.lastName }}
+              — {{ employee.role }}
+            </option>
+          }
+        </select>
+      </div>
+
+      <div class="scope-field">
+        <label for="positionFilter">
+          Stanowisko
+        </label>
+
+        <select
+          id="positionFilter"
+          name="positionFilter"
+          [ngModel]="selectedPosition()"
+          (ngModelChange)="
+            changePositionFilter($event)
+          "
+        >
+          <option value="ALL">
+            Wszystkie stanowiska
+          </option>
+
+          @for (
+            option of positionOptions;
+            track option.value
+          ) {
+            <option [value]="option.value">
+              {{ option.label }}
+            </option>
+          }
+        </select>
+      </div>
+
+      <button
+        class="btn btn-secondary clear-filter-button"
+        type="button"
+        [disabled]="!hasScopeFilters()"
+        (click)="clearScopeFilters()"
+      >
+        Wyczyść filtry
+      </button>
+    </div>
+  </section>
+
+  <section class="active-filter-summary">
+    <div>
+      <span>Pracownik</span>
+
+      <strong>
+        {{ selectedEmployeeName() }}
+      </strong>
+    </div>
+
+    <div>
+      <span>Stanowisko</span>
+
+      <strong>
+        {{ selectedPositionName() }}
+      </strong>
+    </div>
+
+    <div>
+      <span>Zmiany w zakresie</span>
+
+      <strong>
+        {{ scopeFilteredShifts().length }}
+      </strong>
+    </div>
+
+    <div>
+      <span>Aktualnie widoczne</span>
+
+      <strong>
+        {{ filteredShifts().length }}
+      </strong>
+    </div>
+  </section>
+
+  <section class="filter-toolbar">
+    <div class="filter-description">
+      <strong>Widoczne statusy</strong>
+
+      <span>
+        Kliknij status, aby go pokazać lub ukryć.
+      </span>
+    </div>
+
+    <div class="status-filters">
+      <button
+        class="status-filter planned-filter"
+        type="button"
+        [class.active]="showPlanned()"
+        [attr.aria-pressed]="showPlanned()"
+        (click)="toggleStatus('PLANNED')"
+      >
+        <span class="filter-dot"></span>
+
+        Zaplanowane
+
+        <strong>
+          {{ plannedCount() }}
+        </strong>
+      </button>
+
+      <button
+        class="status-filter completed-filter"
+        type="button"
+        [class.active]="showCompleted()"
+        [attr.aria-pressed]="showCompleted()"
+        (click)="toggleStatus('COMPLETED')"
+      >
+        <span class="filter-dot"></span>
+
+        Zakończone
+
+        <strong>
+          {{ completedCount() }}
+        </strong>
+      </button>
+
+      <button
+        class="status-filter cancelled-filter"
+        type="button"
+        [class.active]="showCancelled()"
+        [attr.aria-pressed]="showCancelled()"
+        (click)="toggleStatus('CANCELLED')"
+      >
+        <span class="filter-dot"></span>
+
+        Anulowane
+
+        <strong>
+          {{ cancelledCount() }}
+        </strong>
+      </button>
+
+      <button
+        class="status-filter all-filter"
+        type="button"
+        [class.active]="allStatusesVisible()"
+        (click)="showAllStatuses()"
+      >
+        Wszystkie
+      </button>
+
+      <button
+        class="status-filter planned-only-filter"
+        type="button"
+        [class.active]="
+          showPlanned() &&
+          !showCompleted() &&
+          !showCancelled()
+        "
+        (click)="showOnlyPlanned()"
+      >
+        Tylko bieżące
+      </button>
+    </div>
+  </section>
+
+  @if (successMessage()) {
+    <div class="message-box success-box">
+      {{ successMessage() }}
+    </div>
+  }
+
+  @if (errorMessage()) {
+    <div class="message-box error-box">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="card loading-state">
+      <div class="loading-spinner"></div>
+
+      <p>Pobieranie grafiku...</p>
+    </div>
+  } @else if (
+    filteredShifts().length === 0
+  ) {
+    <div class="empty-week-message">
+      Brak zmian odpowiadających wybranym filtrom.
+      Zmień pracownika, stanowisko lub widoczne statusy.
+    </div>
+  } @else if (
+    viewMode() === 'calendar'
+  ) {
+    <section class="calendar-shell">
+      <div class="calendar-scroll">
+        <div class="calendar-header">
+          <div class="timezone-cell">
+            Czas
+          </div>
+
+          @for (
+            day of weekDays();
+            track day.dateKey
+          ) {
+            <div
+              class="day-header"
+              [class.today-header]="
+                day.isToday
+              "
+            >
+              <span>{{ day.shortName }}</span>
+
+              <strong>
+                {{ day.date | date: 'dd' }}
+              </strong>
+            </div>
+          }
+        </div>
+
+        <div class="calendar-body">
+          <div class="time-axis">
+            @for (
+              hour of hours;
+              track hour
+            ) {
+              <div
+                class="time-label"
+                [style.height.px]="hourHeight"
+              >
+                {{ hourLabel(hour) }}
+              </div>
+            }
+          </div>
+
+          @for (
+            day of weekDays();
+            track day.dateKey
+          ) {
+            <div
+              class="day-column"
+              [class.today-column]="
+                day.isToday
+              "
+              [style.height.px]="
+                calendarHeight
+              "
+            >
+              @for (
+                slotIndex of timeSlots;
+                track slotIndex
+              ) {
+                <button
+                  class="time-slot"
+                  type="button"
+                  [style.height.px]="slotHeight"
+                  (click)="
+                    createAt(
+                      day.dateKey,
+                      slotIndex
+                    )
+                  "
+                >
+                  <span class="slot-add">
+                    +
+                  </span>
+                </button>
+              }
+
+              @for (
+                segment of segmentsForDay(
+                  day.dateKey
+                );
+                track segment.renderKey
+              ) {
+                <button
+                  class="shift-event"
+                  type="button"
+                  [style.top.px]="
+                    segment.top
+                  "
+                  [style.height.px]="
+                    segment.height
+                  "
+                  [style.left.%]="
+                    segment.leftPercent
+                  "
+                  [style.width.%]="
+                    segment.widthPercent
+                  "
+                  [class.shift-planned]="
+                    segment.shift.status ===
+                    'PLANNED'
+                  "
+                  [class.shift-completed]="
+                    segment.shift.status ===
+                    'COMPLETED'
+                  "
+                  [class.shift-cancelled]="
+                    segment.shift.status ===
+                    'CANCELLED'
+                  "
+                  [class.compact-event]="
+                    segment.laneCount >= 3
+                  "
+                  [class.very-compact-event]="
+                    segment.laneCount >= 5
+                  "
+                  [title]="
+                    employeeName(
+                      segment.shift.employeeId
+                    ) +
+                    ' | ' +
+                    (
+                      segment.shift.startsAt
+                        | date: 'HH:mm'
+                    ) +
+                    '–' +
+                    (
+                      segment.shift.endsAt
+                        | date: 'HH:mm'
+                    ) +
+                    ' | ' +
+                    positionLabel(
+                      segment.shift.position
+                    )
+                  "
+                  (click)="
+                    $event.stopPropagation();
+                    openShiftDetails(
+                      segment.shift
+                    )
+                  "
+                >
+                  @if (
+                    segment.laneCount >= 5
+                  ) {
+                    <strong>
+                      {{
+                        employeeInitials(
+                          segment.shift.employeeId
+                        )
+                      }}
+                    </strong>
+
+                    <span>
+                      {{
+                        segment.shift.startsAt
+                          | date: 'HH:mm'
+                      }}
+                    </span>
+                  } @else {
+                    <strong>
+                      {{
+                        employeeName(
+                          segment.shift.employeeId
+                        )
+                      }}
+                    </strong>
+
+                    <span>
+                      {{
+                        segment.shift.startsAt
+                          | date: 'HH:mm'
+                      }}
+                      –
+                      {{
+                        segment.shift.endsAt
+                          | date: 'HH:mm'
+                      }}
+                    </span>
+
+                    @if (
+                      segment.laneCount <= 3
+                    ) {
+                      <small>
+                        {{
+                          positionLabel(
+                            segment.shift.position
+                          )
+                        }}
+                      </small>
+                    }
+                  }
+                </button>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+  } @else {
+    <section class="card schedule-list-card">
+      <div class="list-summary">
+        <strong>
+          Widoczne zmiany:
+          {{ orderedFilteredShifts().length }}
+        </strong>
+
+        <span>
+          {{ selectedEmployeeName() }}
+          ·
+          {{ selectedPositionName() }}
+        </span>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="table schedule-list-table">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Godziny</th>
+              <th>Pracownik</th>
+              <th>Stanowisko</th>
+              <th>Status</th>
+              <th>Notatka</th>
+              <th>Akcje</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (
+              shift of orderedFilteredShifts();
+              track shift.id
+            ) {
+              <tr>
+                <td>
+                  <strong>
+                    {{
+                      shift.startsAt
+                        | date: 'dd.MM.yyyy'
+                    }}
+                  </strong>
+                </td>
+
+                <td>
+                  <span class="list-time">
+                    {{
+                      shift.startsAt
+                        | date: 'HH:mm'
+                    }}
+                    –
+                    {{
+                      shift.endsAt
+                        | date: 'HH:mm'
+                    }}
+                  </span>
+                </td>
+
+                <td>
+                  <div class="employee-cell">
+                    <span class="employee-avatar">
+                      {{
+                        employeeInitials(
+                          shift.employeeId
+                        )
+                      }}
+                    </span>
+
+                    <div>
+                      <strong>
+                        {{
+                          employeeName(
+                            shift.employeeId
+                          )
+                        }}
+                      </strong>
+
+                      <small>
+                        {{ shift.employeeId }}
+                      </small>
+                    </div>
+                  </div>
+                </td>
+
+                <td>
+                  <span class="position-badge">
+                    {{
+                      positionLabel(
+                        shift.position
+                      )
+                    }}
+                  </span>
+                </td>
+
+                <td>
+                  <span
+                    class="status-badge"
+                    [class.status-planned]="
+                      shift.status ===
+                      'PLANNED'
+                    "
+                    [class.status-completed]="
+                      shift.status ===
+                      'COMPLETED'
+                    "
+                    [class.status-cancelled]="
+                      shift.status ===
+                      'CANCELLED'
+                    "
+                  >
+                    {{
+                      statusLabel(
+                        shift.status
+                      )
+                    }}
+                  </span>
+                </td>
+
+                <td>
+                  <span class="list-note">
+                    {{
+                      shift.note ||
+                      'Brak notatki'
+                    }}
+                  </span>
+                </td>
+
+                <td>
+                  <div class="list-actions">
+                    <button
+                      class="btn btn-secondary btn-small"
+                      type="button"
+                      (click)="
+                        openShiftDetails(shift)
+                      "
+                    >
+                      Szczegóły
+                    </button>
+
+                    @if (
+                      shift.status ===
+                      'PLANNED'
+                    ) {
+                      <a
+                        class="btn btn-primary btn-small"
+                        [routerLink]="
+                          editLink(shift.id)
+                        "
+                        [queryParams]="
+                          weekQueryParams()
+                        "
+                      >
+                        Edytuj
+                      </a>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+</section>
+
+@if (selectedShift(); as shift) {
+  <div
+    class="modal-backdrop"
+    (click)="closeShiftDetails()"
+  >
+    <section
+      class="shift-details-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="shift-details-title"
+      (click)="$event.stopPropagation()"
+    >
+      <header class="details-header">
+        <div>
+          <p class="modal-label">
+            Szczegóły zmiany
+          </p>
+
+          <h2 id="shift-details-title">
+            {{ employeeName(shift.employeeId) }}
+          </h2>
+        </div>
+
+        <button
+          class="close-button"
+          type="button"
+          aria-label="Zamknij"
+          (click)="closeShiftDetails()"
+        >
+          ×
+        </button>
+      </header>
+
+      <dl class="shift-details">
+        <div>
+          <dt>Data</dt>
+
+          <dd>
+            {{
+              shift.startsAt
+                | date: 'dd.MM.yyyy'
+            }}
+          </dd>
+        </div>
+
+        <div>
+          <dt>Godziny</dt>
+
+          <dd>
+            {{
+              shift.startsAt
+                | date: 'HH:mm'
+            }}
+            –
+            {{
+              shift.endsAt
+                | date: 'HH:mm'
+            }}
+          </dd>
+        </div>
+
+        <div>
+          <dt>Stanowisko</dt>
+
+          <dd>
+            {{
+              positionLabel(
+                shift.position
+              )
+            }}
+          </dd>
+        </div>
+
+        <div>
+          <dt>Status</dt>
+
+          <dd>
+            <span
+              class="status-badge"
+              [class.status-planned]="
+                shift.status === 'PLANNED'
+              "
+              [class.status-completed]="
+                shift.status === 'COMPLETED'
+              "
+              [class.status-cancelled]="
+                shift.status === 'CANCELLED'
+              "
+            >
+              {{
+                statusLabel(
+                  shift.status
+                )
+              }}
+            </span>
+          </dd>
+        </div>
+
+        <div>
+          <dt>Notatka</dt>
+
+          <dd>
+            {{
+              shift.note ||
+              'Brak notatki'
+            }}
+          </dd>
+        </div>
+      </dl>
+
+      <div class="details-actions">
+        @if (
+          shift.status === 'PLANNED'
+        ) {
+          <a
+            class="btn btn-primary"
+            [routerLink]="
+              editLink(shift.id)
+            "
+            [queryParams]="
+              weekQueryParams()
+            "
+          >
+            Edytuj
+          </a>
+
+          <button
+            class="btn btn-complete"
+            type="button"
+            (click)="
+              startAction(
+                'complete',
+                shift
+              )
+            "
+          >
+            Zakończ
+          </button>
+
+          <button
+            class="btn btn-outline-danger"
+            type="button"
+            (click)="
+              startAction(
+                'cancel',
+                shift
+              )
+            "
+          >
+            Anuluj zmianę
+          </button>
+        }
+
+        <button
+          class="btn btn-secondary"
+          type="button"
+          (click)="closeShiftDetails()"
+        >
+          Zamknij
+        </button>
+      </div>
+    </section>
+  </div>
+}
+
+@if (pendingAction(); as action) {
+  <div
+    class="modal-backdrop action-backdrop"
+    (click)="closeAction()"
+  >
+    <section
+      class="confirmation-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="shift-action-title"
+      (click)="$event.stopPropagation()"
+    >
+      <p
+        class="modal-label"
+        [class.danger-label]="
+          action.type === 'cancel'
+        "
+        [class.success-label]="
+          action.type === 'complete'
+        "
+      >
+        Potwierdzenie operacji
+      </p>
+
+      <h2 id="shift-action-title">
+        {{
+          action.type === 'cancel'
+            ? 'Anulować zmianę?'
+            : 'Zakończyć zmianę?'
+        }}
+      </h2>
+
+      <p>
+        Zmiana pracownika
+        <strong>
+          {{
+            employeeName(
+              action.shift.employeeId
+            )
+          }}
+        </strong>
+        zostanie oznaczona jako
+        {{
+          action.type === 'cancel'
+            ? 'anulowana'
+            : 'zakończona'
+        }}.
+      </p>
+
+      <div class="modal-actions">
+        <button
+          class="btn"
+          [class.btn-danger]="
+            action.type === 'cancel'
+          "
+          [class.btn-complete]="
+            action.type === 'complete'
+          "
+          type="button"
+          [disabled]="
+            actionShiftId() ===
+            action.shift.id
+          "
+          (click)="confirmAction()"
+        >
+          {{
+            actionShiftId() ===
+            action.shift.id
+              ? 'Zapisywanie...'
+              : action.type === 'cancel'
+                ? 'Tak, anuluj'
+                : 'Tak, zakończ'
+          }}
+        </button>
+
+        <button
+          class="btn btn-secondary"
+          type="button"
+          [disabled]="
+            actionShiftId() ===
+            action.shift.id
+          "
+          (click)="closeAction()"
+        >
+          Wróć
+        </button>
+      </div>
+    </section>
+  </div>
+}

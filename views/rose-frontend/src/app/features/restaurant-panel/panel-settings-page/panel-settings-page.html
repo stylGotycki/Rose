@@ -1,0 +1,236 @@
+<section class="page settings-page">
+  <header class="page-header">
+    <p class="eyebrow">
+      Konfiguracja
+    </p>
+
+    <h1 class="page-title">
+      Ustawienia restauracji
+    </h1>
+
+    <p class="page-subtitle">
+      Edytuj podstawowe dane wybranej restauracji.
+      Zmiany będą od razu widoczne w całym panelu.
+    </p>
+  </header>
+
+  <div class="settings-layout">
+    <form
+      class="card form settings-form"
+      (ngSubmit)="submit()"
+    >
+      <header class="section-header">
+        <div>
+          <h2>Dane podstawowe</h2>
+
+          <p>
+            Nazwa, opis i dane identyfikacyjne restauracji.
+          </p>
+        </div>
+      </header>
+
+      <div class="form-field">
+        <label for="restaurantName">
+          Nazwa restauracji *
+        </label>
+
+        <input
+          id="restaurantName"
+          name="restaurantName"
+          type="text"
+          maxlength="128"
+          [(ngModel)]="name"
+        />
+
+        <span class="field-hint">
+          {{ name.length }}/128
+        </span>
+      </div>
+
+      <div class="form-field">
+        <label for="restaurantDescription">
+          Opis
+        </label>
+
+        <textarea
+          id="restaurantDescription"
+          name="restaurantDescription"
+          rows="7"
+          maxlength="1024"
+          [(ngModel)]="description"
+        ></textarea>
+
+        <span class="field-hint">
+          {{ description.length }}/1024
+        </span>
+      </div>
+
+      <div class="form-field">
+        <label for="restaurantTaxId">
+          NIP / Tax ID
+        </label>
+
+        <input
+          id="restaurantTaxId"
+          name="restaurantTaxId"
+          type="text"
+          maxlength="32"
+          [(ngModel)]="taxId"
+        />
+      </div>
+
+      @if (successMessage()) {
+        <div class="message-box success-box">
+          {{ successMessage() }}
+        </div>
+      }
+
+      @if (errorMessage()) {
+        <div class="message-box error-box">
+          {{ errorMessage() }}
+        </div>
+      }
+
+      <div class="form-actions">
+        <button
+          class="btn btn-primary"
+          type="submit"
+          [disabled]="saving() || archiving()"
+        >
+          {{
+            saving()
+              ? 'Zapisywanie...'
+              : 'Zapisz zmiany'
+          }}
+        </button>
+      </div>
+    </form>
+
+    <aside class="settings-sidebar">
+      @if (
+        restaurantContext.restaurant();
+        as restaurant
+      ) {
+        <section class="card information-card">
+          <h2>Informacje</h2>
+
+          <dl>
+            <div>
+              <dt>Status</dt>
+              <dd>
+                <span class="badge">
+                  {{
+                    restaurant.status === 'ACTIVE'
+                      ? 'Aktywna'
+                      : 'Archiwalna'
+                  }}
+                </span>
+              </dd>
+            </div>
+
+            <div>
+              <dt>Identyfikator</dt>
+              <dd class="identifier">
+                {{ restaurant.id }}
+              </dd>
+            </div>
+
+            <div>
+              <dt>Utworzono</dt>
+              <dd>
+                {{ restaurant.createdAt | date: 'dd.MM.yyyy, HH:mm' }}
+              </dd>
+            </div>
+
+            <div>
+              <dt>Ostatnia aktualizacja</dt>
+              <dd>
+                {{ restaurant.updatedAt | date: 'dd.MM.yyyy, HH:mm' }}
+              </dd>
+            </div>
+          </dl>
+        </section>
+      }
+
+      <section class="card danger-zone">
+        <div>
+          <p class="danger-label">
+            Strefa niebezpieczna
+          </p>
+
+          <h2>Archiwizacja restauracji</h2>
+
+          <p>
+            Restauracja zniknie z listy aktywnych
+            restauracji. Operacja może wpłynąć na dostęp
+            do jej panelu i danych.
+          </p>
+        </div>
+
+        <button
+          class="btn btn-danger"
+          type="button"
+          [disabled]="saving() || archiving()"
+          (click)="showArchiveConfirmation()"
+        >
+          Archiwizuj restaurację
+        </button>
+      </section>
+    </aside>
+  </div>
+</section>
+
+@if (archiveConfirmationVisible()) {
+  <div
+    class="modal-backdrop"
+    (click)="hideArchiveConfirmation()"
+  >
+    <section
+      class="confirmation-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="archive-modal-title"
+      (click)="$event.stopPropagation()"
+    >
+      <p class="danger-label">
+        Potwierdzenie operacji
+      </p>
+
+      <h2 id="archive-modal-title">
+        Zarchiwizować restaurację?
+      </h2>
+
+      <p>
+        Restauracja
+        <strong>
+          {{ restaurantContext.restaurantName() }}
+        </strong>
+        zostanie przeniesiona do archiwum.
+      </p>
+
+      <div class="modal-actions">
+        <button
+          class="btn btn-danger"
+          type="button"
+          [disabled]="archiving()"
+          (click)="archive()"
+        >
+          {{
+            archiving()
+              ? 'Archiwizowanie...'
+              : 'Tak, archiwizuj'
+          }}
+        </button>
+
+        <button
+          class="btn btn-secondary"
+          type="button"
+          [disabled]="archiving()"
+          (click)="hideArchiveConfirmation()"
+        >
+          Anuluj
+        </button>
+      </div>
+    </section>
+  </div>
+}

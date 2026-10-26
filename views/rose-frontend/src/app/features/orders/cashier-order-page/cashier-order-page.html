@@ -1,0 +1,431 @@
+<section class="page cashier-page">
+  <header class="cashier-header">
+    <div>
+      <p class="eyebrow">
+        Stanowisko kasowe
+      </p>
+
+      <h1 class="page-title">
+        Kasa
+      </h1>
+
+      <p class="page-subtitle">
+        Twórz i uzupełniaj zamówienia restauracji
+        {{ restaurantContext.restaurantName() }}.
+      </p>
+    </div>
+
+    <a
+      class="btn btn-secondary"
+      [routerLink]="ordersLink()"
+    >
+      Lista zamówień
+    </a>
+  </header>
+
+  @if (successMessage()) {
+    <div class="message-box success-box">
+      {{ successMessage() }}
+    </div>
+  }
+
+  @if (errorMessage()) {
+    <div class="message-box error-box">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="card loading-state">
+      <div class="loading-spinner"></div>
+
+      <p>Uruchamianie stanowiska kasowego...</p>
+    </div>
+  } @else if (!activeMenu()) {
+    <section class="card cashier-error-state">
+      <h2>Brak aktywnego menu</h2>
+
+      <p>
+        Przed rozpoczęciem sprzedaży aktywuj menu
+        restauracji.
+      </p>
+
+      <a
+        class="btn btn-primary"
+        [routerLink]="ordersLink()"
+      >
+        Wróć do zamówień
+      </a>
+    </section>
+  } @else if (!currentOrder()) {
+    <section class="start-order-layout">
+      <div class="start-order-introduction">
+        <p class="section-label">
+          Nowe zamówienie
+        </p>
+
+        <h2>Rozpocznij obsługę klienta</h2>
+
+        <p>
+          Najpierw utwórz szkic zamówienia.
+          Następnie wybierz pozycje z aktywnego menu.
+        </p>
+
+        <div class="active-menu-info">
+          <span>Aktywne menu</span>
+
+          <strong>
+            {{ activeMenu()?.name }}
+          </strong>
+        </div>
+      </div>
+
+      <div class="card start-order-card">
+        <div class="form-field">
+          <label for="orderNote">
+            Notatka do zamówienia
+          </label>
+
+          <textarea
+            id="orderNote"
+            name="orderNote"
+            rows="5"
+            maxlength="512"
+            placeholder="Na przykład: stolik 4, odbiór osobisty..."
+            [(ngModel)]="orderNote"
+          ></textarea>
+
+          <span class="field-hint">
+            {{ orderNote.length }}/512
+          </span>
+        </div>
+
+        <button
+          class="btn btn-primary"
+          type="button"
+          [disabled]="startingOrder()"
+          (click)="startNewOrder()"
+        >
+          {{
+            startingOrder()
+              ? 'Rozpoczynanie...'
+              : 'Rozpocznij zamówienie'
+          }}
+        </button>
+      </div>
+    </section>
+  } @else if (currentOrder(); as order) {
+    @if (!editableOrder()) {
+      <section class="card cashier-error-state">
+        <h2>Zamówienie nie jest już szkicem</h2>
+
+        <p>
+          Zamówienie
+          <strong>
+            #{{ shortId(order.id) }}
+          </strong>
+          zostało już wysłane do realizacji
+          i nie może być dalej edytowane w kasie.
+        </p>
+
+        <a
+          class="btn btn-primary"
+          [routerLink]="ordersLink()"
+        >
+          Przejdź do zamówień
+        </a>
+      </section>
+    } @else {
+      <div class="cashier-layout">
+        <main class="menu-browser">
+          <section class="browser-heading">
+            <div>
+              <p class="section-label">
+                {{ activeMenu()?.name }}
+              </p>
+
+              <h2>Wybierz pozycje</h2>
+            </div>
+
+            <span class="order-reference">
+              Zamówienie
+              <strong>
+                #{{ shortId(order.id) }}
+              </strong>
+            </span>
+          </section>
+
+          @if (orderedCategories().length === 0) {
+            <div class="empty-menu">
+              Aktywne menu nie posiada żadnych kategorii.
+            </div>
+          } @else {
+            <div class="menu-categories">
+              @for (
+                category of orderedCategories();
+                track category.id
+              ) {
+                <section class="cashier-category">
+                  <header>
+                    <div>
+                      <span>
+                        Kategoria
+                      </span>
+
+                      <h3>
+                        {{ category.name }}
+                      </h3>
+                    </div>
+
+                    <strong>
+                      {{
+                        availableItemsForCategory(
+                          category.id
+                        ).length
+                      }}
+                    </strong>
+                  </header>
+
+                  @if (
+                    availableItemsForCategory(
+                      category.id
+                    ).length === 0
+                  ) {
+                    <p class="empty-category">
+                      Brak dostępnych pozycji.
+                    </p>
+                  } @else {
+                    <div class="cashier-item-grid">
+                      @for (
+                        item of availableItemsForCategory(
+                          category.id
+                        );
+                        track item.id
+                      ) {
+                        <article class="cashier-item-card">
+                          <div>
+                            <h4>{{ item.name }}</h4>
+
+                            <p>
+                              {{
+                                item.description ||
+                                'Brak opisu.'
+                              }}
+                            </p>
+                          </div>
+
+                          <footer>
+                            <strong>
+                              {{
+                                item.price
+                                  | number: '1.2-2'
+                              }}
+                              {{ item.currency }}
+                            </strong>
+
+                            <button
+                              class="btn btn-primary btn-small"
+                              type="button"
+                              [disabled]="
+                                processingItemId() ===
+                                item.id
+                              "
+                              (click)="addMenuItem(item)"
+                            >
+                              {{
+                                processingItemId() ===
+                                item.id
+                                  ? 'Dodawanie...'
+                                  : 'Dodaj'
+                              }}
+                            </button>
+                          </footer>
+                        </article>
+                      }
+                    </div>
+                  }
+                </section>
+              }
+            </div>
+          }
+        </main>
+
+        <aside class="cart-panel">
+          <header class="cart-header">
+            <div>
+              <span>Koszyk</span>
+
+              <h2>
+                #{{ shortId(order.id) }}
+              </h2>
+            </div>
+
+            <span class="cart-count">
+              {{ totalQuantity() }}
+            </span>
+          </header>
+
+          @if (order.note) {
+            <div class="cart-order-note">
+              {{ order.note }}
+            </div>
+          }
+
+          @if (cartItems().length === 0) {
+            <div class="empty-cart">
+              <strong>Koszyk jest pusty</strong>
+
+              <p>
+                Dodaj pozycje z menu po lewej stronie.
+              </p>
+            </div>
+          } @else {
+            <div class="cart-items">
+              @for (
+                item of cartItems();
+                track item.id
+              ) {
+                <article class="cart-item">
+                  <header>
+                    <div>
+                      <h3>{{ item.name }}</h3>
+
+                      <span>
+                        {{
+                          item.unitPrice
+                            | number: '1.2-2'
+                        }}
+                        {{ item.currency }}
+                        / szt.
+                      </span>
+                    </div>
+
+                    <button
+                      class="remove-button"
+                      type="button"
+                      aria-label="Usuń pozycję"
+                      [disabled]="
+                        processingItemId() === item.id
+                      "
+                      (click)="removeItem(item)"
+                    >
+                      ×
+                    </button>
+                  </header>
+
+                  <div class="quantity-row">
+                    <div class="quantity-control">
+                      <button
+                        type="button"
+                        [disabled]="
+                          processingItemId() === item.id
+                        "
+                        (click)="decreaseQuantity(item)"
+                      >
+                        −
+                      </button>
+
+                      <strong>
+                        {{ item.quantity }}
+                      </strong>
+
+                      <button
+                        type="button"
+                        [disabled]="
+                          processingItemId() === item.id
+                        "
+                        (click)="increaseQuantity(item)"
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    <strong class="line-total">
+                      {{
+                        item.totalPrice
+                          | number: '1.2-2'
+                      }}
+                      {{ item.currency }}
+                    </strong>
+                  </div>
+
+                  <div class="item-note-field">
+                    <label
+                      [for]="'item-note-' + item.id"
+                    >
+                      Notatka do pozycji
+                    </label>
+
+                    <textarea
+                      [id]="'item-note-' + item.id"
+                      [name]="'item-note-' + item.id"
+                      rows="2"
+                      maxlength="512"
+                      [ngModel]="
+                        itemNoteValue(item.id)
+                      "
+                      (ngModelChange)="
+                        setItemNote(
+                          item.id,
+                          $event
+                        )
+                      "
+                    ></textarea>
+
+                    <button
+                      class="save-note-button"
+                      type="button"
+                      [disabled]="
+                        processingItemId() === item.id
+                      "
+                      (click)="saveItemNote(item)"
+                    >
+                      Zapisz notatkę
+                    </button>
+                  </div>
+                </article>
+              }
+            </div>
+          }
+
+          <footer class="cart-footer">
+            <div class="cart-total">
+              <span>Razem</span>
+
+              <strong>
+                {{
+                  order.totalAmount
+                    | number: '1.2-2'
+                }}
+                {{ order.currency || '' }}
+              </strong>
+            </div>
+
+            <button
+              class="btn btn-primary submit-order-button"
+              type="button"
+              [disabled]="
+                submittingOrder() ||
+                order.items.length === 0
+              "
+              (click)="submitCurrentOrder()"
+            >
+              {{
+                submittingOrder()
+                  ? 'Wysyłanie...'
+                  : 'Wyślij do realizacji'
+              }}
+            </button>
+
+            <a
+              class="btn btn-secondary leave-order-button"
+              [routerLink]="ordersLink()"
+            >
+              Zapisz szkic i wyjdź
+            </a>
+          </footer>
+        </aside>
+      </div>
+    }
+  }
+</section>

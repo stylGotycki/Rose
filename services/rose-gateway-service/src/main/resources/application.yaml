@@ -1,0 +1,250 @@
+spring:
+  application:
+    name: rose-gateway-service
+
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          routes:
+            # ==================================================
+            # Swagger / OpenAPI through Gateway
+            # ==================================================
+
+            - id: identity-api-docs
+              uri: ${IDENTITY_SERVICE_URL:http://localhost:8081}
+              predicates:
+                - Path=/swagger/identity/v3/api-docs
+              filters:
+                - RewritePath=/swagger/identity/v3/api-docs,/v3/api-docs
+
+            - id: access-api-docs
+              uri: ${ACCESS_SERVICE_URL:http://localhost:8082}
+              predicates:
+                - Path=/swagger/access/v3/api-docs
+              filters:
+                - RewritePath=/swagger/access/v3/api-docs,/v3/api-docs
+
+            - id: organization-api-docs
+              uri: ${ORGANIZATION_SERVICE_URL:http://localhost:8083}
+              predicates:
+                - Path=/swagger/organization/v3/api-docs
+              filters:
+                - RewritePath=/swagger/organization/v3/api-docs,/v3/api-docs
+
+            - id: workforce-api-docs
+              uri: ${WORKFORCE_SERVICE_URL:http://localhost:8084}
+              predicates:
+                - Path=/swagger/workforce/v3/api-docs
+              filters:
+                - RewritePath=/swagger/workforce/v3/api-docs,/v3/api-docs
+
+            - id: menu-api-docs
+              uri: ${MENU_SERVICE_URL:http://localhost:8085}
+              predicates:
+                - Path=/swagger/menu/v3/api-docs
+              filters:
+                - RewritePath=/swagger/menu/v3/api-docs,/v3/api-docs
+
+            - id: order-api-docs
+              uri: ${ORDER_SERVICE_URL:http://localhost:8086}
+              predicates:
+                - Path=/swagger/order/v3/api-docs
+              filters:
+                - RewritePath=/swagger/order/v3/api-docs,/v3/api-docs
+
+            - id: billing-api-docs
+              uri: ${BILLING_SERVICE_URL:http://localhost:8087}
+              predicates:
+                - Path=/swagger/billing/v3/api-docs
+              filters:
+                - RewritePath=/swagger/billing/v3/api-docs,/v3/api-docs
+
+            # ==================================================
+            # Identity Service
+            # ==================================================
+
+            - id: identity-auth
+              uri: ${IDENTITY_SERVICE_URL:http://localhost:8081}
+              predicates:
+                - Path=/api/auth/**
+
+            - id: identity-users
+              uri: ${IDENTITY_SERVICE_URL:http://localhost:8081}
+              predicates:
+                - Path=/api/users/**
+
+            # ==================================================
+            # Access Service
+            # ==================================================
+
+            - id: access-restaurant-members
+              uri: ${ACCESS_SERVICE_URL:http://localhost:8082}
+              predicates:
+                - Path=/api/restaurant-members/**
+
+            - id: access-restaurant-members-nested
+              uri: ${ACCESS_SERVICE_URL:http://localhost:8082}
+              predicates:
+                - Path=/api/restaurants/*/members/**
+
+            # ==================================================
+            # Workforce Service
+            # ==================================================
+
+            - id: workforce-employees
+              uri: ${WORKFORCE_SERVICE_URL:http://localhost:8084}
+              predicates:
+                - Path=/api/employees/**
+
+            - id: workforce-restaurant-employees
+              uri: ${WORKFORCE_SERVICE_URL:http://localhost:8084}
+              predicates:
+                - Path=/api/restaurants/*/employees/**
+
+            - id: workforce-schedule-shifts
+              uri: ${WORKFORCE_SERVICE_URL:http://localhost:8084}
+              predicates:
+                - Path=/api/schedule-shifts/**
+
+            - id: workforce-restaurant-schedule-shifts
+              uri: ${WORKFORCE_SERVICE_URL:http://localhost:8084}
+              predicates:
+                - Path=/api/restaurants/*/schedule-shifts/**
+
+            - id: workforce-schedule
+              uri: ${WORKFORCE_SERVICE_URL:http://localhost:8084}
+              predicates:
+                - Path=/api/schedule/**
+
+            - id: workforce-restaurant-schedule
+              uri: ${WORKFORCE_SERVICE_URL:http://localhost:8084}
+              predicates:
+                - Path=/api/restaurants/*/schedule/**
+
+            - id: workforce-shifts
+              uri: ${WORKFORCE_SERVICE_URL:http://localhost:8084}
+              predicates:
+                - Path=/api/shifts/**
+
+            # ==================================================
+            # Menu Service
+            # ==================================================
+
+            - id: menu-service
+              uri: ${MENU_SERVICE_URL:http://localhost:8085}
+              predicates:
+                - Path=/api/menus/**
+
+            - id: menu-restaurant
+              uri: ${MENU_SERVICE_URL:http://localhost:8085}
+              predicates:
+                - Path=/api/restaurants/*/menus/**
+
+            - id: menu-categories
+              uri: ${MENU_SERVICE_URL:http://localhost:8085}
+              predicates:
+                - Path=/api/menu-categories/**
+
+            - id: menu-items
+              uri: ${MENU_SERVICE_URL:http://localhost:8085}
+              predicates:
+                - Path=/api/menu-items/**
+
+            - id: menu-restaurant-items
+              uri: ${MENU_SERVICE_URL:http://localhost:8085}
+              predicates:
+                - Path=/api/restaurants/*/menu-items/**
+
+            # ==================================================
+            # Billing Service
+            #
+            # This route must be before order-restaurant.
+            # ==================================================
+
+            - id: billing-order-bill
+              uri: ${BILLING_SERVICE_URL:http://localhost:8087}
+              predicates:
+                - Path=/api/restaurants/*/orders/*/bill
+
+            - id: billing-service
+              uri: ${BILLING_SERVICE_URL:http://localhost:8087}
+              predicates:
+                - Path=/api/bills/**
+
+            - id: billing-restaurant
+              uri: ${BILLING_SERVICE_URL:http://localhost:8087}
+              predicates:
+                - Path=/api/restaurants/*/bills/**
+
+            # ==================================================
+            # Order Service
+            # ==================================================
+
+            - id: order-service
+              uri: ${ORDER_SERVICE_URL:http://localhost:8086}
+              predicates:
+                - Path=/api/orders/**
+
+            - id: order-restaurant
+              uri: ${ORDER_SERVICE_URL:http://localhost:8086}
+              predicates:
+                - Path=/api/restaurants/*/orders/**
+
+            - id: kitchen-service
+              uri: ${ORDER_SERVICE_URL:http://localhost:8086}
+              predicates:
+                - Path=/api/kitchen/**
+
+            - id: kitchen-restaurant
+              uri: ${ORDER_SERVICE_URL:http://localhost:8086}
+              predicates:
+                - Path=/api/restaurants/*/kitchen/**
+
+            # ==================================================
+            # Organization Service
+            #
+            # Generic /api/restaurants/** must be near the end.
+            # ==================================================
+
+            - id: organization-locations
+              uri: ${ORGANIZATION_SERVICE_URL:http://localhost:8083}
+              predicates:
+                - Path=/api/locations/**
+
+            - id: organization-restaurants
+              uri: ${ORGANIZATION_SERVICE_URL:http://localhost:8083}
+              predicates:
+                - Path=/api/restaurants/**
+
+server:
+  port: ${SERVER_PORT:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+springdoc:
+  swagger-ui:
+    urls:
+      - name: Identity Service
+        url: /swagger/identity/v3/api-docs
+      - name: Access Service
+        url: /swagger/access/v3/api-docs
+      - name: Organization Service
+        url: /swagger/organization/v3/api-docs
+      - name: Workforce Service
+        url: /swagger/workforce/v3/api-docs
+      - name: Menu Service
+        url: /swagger/menu/v3/api-docs
+      - name: Order Service
+        url: /swagger/order/v3/api-docs
+      - name: Billing Service
+        url: /swagger/billing/v3/api-docs
+
+logging:
+  level:
+    net.rose.rose_gateway_service: INFO
+    org.springframework.cloud.gateway: INFO

@@ -1,0 +1,213 @@
+<section class="page shift-form-page">
+  <a
+    class="back-link"
+    [routerLink]="listLink()"
+    [queryParams]="listQueryParams()"
+  >
+    ← Wróć do kalendarza
+  </a>
+
+  @if (loading()) {
+    <div class="card loading-state">
+      <div class="loading-spinner"></div>
+
+      <p>Pobieranie danych zmiany...</p>
+    </div>
+  } @else if (!shift()) {
+    <div class="card fatal-error">
+      <h1>Nie udało się otworzyć zmiany</h1>
+
+      <p class="error-message">
+        {{ errorMessage() }}
+      </p>
+
+      <a
+        class="btn btn-primary"
+        [routerLink]="listLink()"
+        [queryParams]="listQueryParams()"
+      >
+        Wróć do kalendarza
+      </a>
+    </div>
+  } @else if (shift(); as currentShift) {
+    <div class="form-layout">
+      <div class="form-introduction">
+        <p class="eyebrow">
+          Edycja grafiku
+        </p>
+
+        <h1 class="page-title">
+          Edytuj zmianę
+        </h1>
+
+        <p class="page-subtitle">
+          Zmień datę, godzinę, stanowisko lub notatkę.
+        </p>
+
+        <div class="employee-information">
+          <span>Pracownik</span>
+
+          <strong>
+            @if (employee(); as currentEmployee) {
+              {{ currentEmployee.firstName }}
+              {{ currentEmployee.lastName }}
+            } @else {
+              Nieznany pracownik
+            }
+          </strong>
+
+          <span>ID zmiany</span>
+
+          <strong>
+            {{ currentShift.id }}
+          </strong>
+        </div>
+      </div>
+
+      <form
+        class="card form shift-form"
+        (ngSubmit)="submit()"
+      >
+        <section class="datetime-card">
+          <h2>Początek zmiany</h2>
+
+          <div class="form-row">
+            <div class="form-field">
+              <label for="startDate">
+                Data *
+              </label>
+
+              <input
+                id="startDate"
+                name="startDate"
+                type="date"
+                required
+                [(ngModel)]="startDate"
+                (change)="ensureValidEnd()"
+              />
+            </div>
+
+            <div class="form-field">
+              <label for="startTime">
+                Godzina *
+              </label>
+
+              <input
+                id="startTime"
+                name="startTime"
+                type="time"
+                step="900"
+                required
+                [(ngModel)]="startTime"
+                (change)="ensureValidEnd()"
+              />
+            </div>
+          </div>
+        </section>
+
+        <section class="datetime-card">
+          <h2>Koniec zmiany</h2>
+
+          <div class="form-row">
+            <div class="form-field">
+              <label for="endDate">
+                Data *
+              </label>
+
+              <input
+                id="endDate"
+                name="endDate"
+                type="date"
+                required
+                [(ngModel)]="endDate"
+              />
+            </div>
+
+            <div class="form-field">
+              <label for="endTime">
+                Godzina *
+              </label>
+
+              <input
+                id="endTime"
+                name="endTime"
+                type="time"
+                step="900"
+                required
+                [(ngModel)]="endTime"
+              />
+            </div>
+          </div>
+        </section>
+
+        <div class="form-field">
+          <label for="position">
+            Stanowisko *
+          </label>
+
+          <select
+            id="position"
+            name="position"
+            required
+            [(ngModel)]="position"
+          >
+            @for (
+              option of positions;
+              track option.value
+            ) {
+              <option [value]="option.value">
+                {{ option.label }}
+              </option>
+            }
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label for="note">
+            Notatka
+          </label>
+
+          <textarea
+            id="note"
+            name="note"
+            rows="5"
+            maxlength="1000"
+            [(ngModel)]="note"
+          ></textarea>
+
+          <span class="field-hint">
+            {{ note.length }}/1000
+          </span>
+        </div>
+
+        @if (errorMessage()) {
+          <div class="message-box error-box">
+            {{ errorMessage() }}
+          </div>
+        }
+
+        <div class="form-actions">
+          <button
+            class="btn btn-primary"
+            type="submit"
+            [disabled]="saving()"
+          >
+            {{
+              saving()
+                ? 'Zapisywanie...'
+                : 'Zapisz zmiany'
+            }}
+          </button>
+
+          <a
+            class="btn btn-secondary"
+            [routerLink]="listLink()"
+            [queryParams]="listQueryParams()"
+          >
+            Anuluj
+          </a>
+        </div>
+      </form>
+    </div>
+  }
+</section>

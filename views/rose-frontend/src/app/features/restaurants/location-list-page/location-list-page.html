@@ -1,0 +1,215 @@
+<section class="page locations-page">
+  <header class="locations-header">
+    <div>
+      <p class="eyebrow">Lokale</p>
+
+      <h1 class="page-title">
+        Lokale restauracji
+      </h1>
+
+      <p class="page-subtitle">
+        Zarządzaj fizycznymi lokalami należącymi do restauracji
+        {{ restaurantContext.restaurantName() }}.
+      </p>
+    </div>
+
+    <a
+      class="btn btn-primary"
+      [routerLink]="createLink()"
+    >
+      Dodaj lokal
+    </a>
+  </header>
+
+  @if (successMessage()) {
+    <div class="message-box success-box">
+      {{ successMessage() }}
+    </div>
+  }
+
+  @if (errorMessage()) {
+    <div class="message-box error-box">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="card loading-state">
+      <div class="loading-spinner"></div>
+      <p>Pobieranie lokali...</p>
+    </div>
+  } @else if (activeLocations().length === 0) {
+    <div class="empty-state">
+      <img
+        class="empty-logo"
+        src="/assets/logo.png"
+        alt="ROSE"
+      />
+
+      <h2>Brak aktywnych lokali</h2>
+
+      <p>
+        Dodaj pierwszy lokal, aby określić fizyczne miejsce
+        działania restauracji.
+      </p>
+
+      <a
+        class="btn btn-primary"
+        [routerLink]="createLink()"
+      >
+        Dodaj pierwszy lokal
+      </a>
+    </div>
+  } @else {
+    <div class="location-grid">
+      @for (
+        location of activeLocations();
+        track location.id
+      ) {
+        <article class="location-card">
+          <header class="location-card-header">
+            <div class="location-avatar">
+              {{ location.name.charAt(0).toUpperCase() }}
+            </div>
+
+            <span class="badge">Aktywny</span>
+          </header>
+
+          <div class="location-content">
+            <h2>{{ location.name }}</h2>
+
+            <address>
+              {{ location.street }}
+              {{ location.buildingNumber }}<br />
+              {{ location.postalCode }}
+              {{ location.city }}
+            </address>
+          </div>
+
+          <dl class="location-details">
+            <div>
+              <dt>Miasto</dt>
+              <dd>{{ location.city }}</dd>
+            </div>
+
+            <div>
+              <dt>Utworzono</dt>
+              <dd>
+                {{
+                  location.createdAt
+                    | date: 'dd.MM.yyyy'
+                }}
+              </dd>
+            </div>
+          </dl>
+
+          <div class="location-actions">
+            <a
+              class="btn btn-secondary"
+              [routerLink]="editLink(location.id)"
+            >
+              Edytuj
+            </a>
+
+            <button
+              class="btn btn-outline-danger"
+              type="button"
+              (click)="showArchiveConfirmation(location)"
+            >
+              Archiwizuj
+            </button>
+          </div>
+        </article>
+      }
+    </div>
+  }
+
+  @if (archivedLocations().length > 0) {
+    <section class="archived-section">
+      <header>
+        <h2>Archiwalne lokale</h2>
+
+        <span>
+          {{ archivedLocations().length }}
+        </span>
+      </header>
+
+      <div class="archived-list">
+        @for (
+          location of archivedLocations();
+          track location.id
+        ) {
+          <article class="archived-item">
+            <div>
+              <strong>{{ location.name }}</strong>
+
+              <p>
+                {{ location.street }}
+                {{ location.buildingNumber }},
+                {{ location.postalCode }}
+                {{ location.city }}
+              </p>
+            </div>
+
+            <span class="badge archived-badge">
+              Archiwalny
+            </span>
+          </article>
+        }
+      </div>
+    </section>
+  }
+</section>
+
+@if (locationToArchive(); as location) {
+  <div
+    class="modal-backdrop"
+    (click)="hideArchiveConfirmation()"
+  >
+    <section
+      class="confirmation-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="archive-location-title"
+      (click)="$event.stopPropagation()"
+    >
+      <p class="danger-label">
+        Potwierdzenie operacji
+      </p>
+
+      <h2 id="archive-location-title">
+        Zarchiwizować lokal?
+      </h2>
+
+      <p>
+        Lokal
+        <strong>{{ location.name }}</strong>
+        zostanie przeniesiony do archiwum.
+      </p>
+
+      <div class="modal-actions">
+        <button
+          class="btn btn-danger"
+          type="button"
+          [disabled]="archivingId() === location.id"
+          (click)="archiveLocation()"
+        >
+          {{
+            archivingId() === location.id
+              ? 'Archiwizowanie...'
+              : 'Tak, archiwizuj'
+          }}
+        </button>
+
+        <button
+          class="btn btn-secondary"
+          type="button"
+          [disabled]="archivingId() === location.id"
+          (click)="hideArchiveConfirmation()"
+        >
+          Anuluj
+        </button>
+      </div>
+    </section>
+  </div>
+}

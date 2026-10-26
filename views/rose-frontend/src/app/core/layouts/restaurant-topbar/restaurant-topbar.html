@@ -1,0 +1,38 @@
+<header class="restaurant-topbar">
+  <div>
+    <p class="topbar-eyebrow">
+      Panel restauracji
+    </p>
+
+    <h1>
+      {{ restaurantContext.restaurantName() }}
+    </h1>
+  </div>
+
+  <div class="topbar-actions">
+    <a
+      class="home-link"
+      routerLink="/"
+    >
+      Strona główna
+    </a>
+
+    @if (auth.currentUser(); as user) {
+      <div class="topbar-user">
+        <span class="topbar-avatar">
+          {{ auth.userInitial() }}
+        </span>
+
+        <span>{{ user.firstName }}</span>
+      </div>
+    }
+
+    <button
+      class="btn btn-secondary"
+      type="button"
+      (click)="logout()"
+    >
+      Wyloguj
+    </button>
+  </div>
+</header>

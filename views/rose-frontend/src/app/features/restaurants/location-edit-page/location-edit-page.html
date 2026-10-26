@@ -1,0 +1,167 @@
+<section class="page location-form-page">
+  <a
+    class="back-link"
+    [routerLink]="listLink()"
+  >
+    ← Wróć do lokali
+  </a>
+
+  @if (loading()) {
+    <div class="card loading-state">
+      <div class="loading-spinner"></div>
+      <p>Pobieranie danych lokalu...</p>
+    </div>
+  } @else if (errorMessage() && !name) {
+    <div class="card fatal-error">
+      <h1>Nie udało się otworzyć lokalu</h1>
+
+      <p class="error-message">
+        {{ errorMessage() }}
+      </p>
+
+      <a
+        class="btn btn-primary"
+        [routerLink]="listLink()"
+      >
+        Wróć do lokali
+      </a>
+    </div>
+  } @else {
+    <div class="form-layout">
+      <div class="form-introduction">
+        <p class="eyebrow">
+          Edycja lokalu
+        </p>
+
+        <h1 class="page-title">
+          {{ name }}
+        </h1>
+
+        <p class="page-subtitle">
+          Zaktualizuj nazwę i dane adresowe lokalu.
+        </p>
+
+        <div class="information-card">
+          <h2>Zmiany danych</h2>
+
+          <p>
+            Po zapisaniu zmian lista lokali zostanie
+            automatycznie odświeżona.
+          </p>
+        </div>
+      </div>
+
+      <form
+        class="card form location-form"
+        (ngSubmit)="submit()"
+      >
+        <div class="form-field">
+          <label for="locationName">
+            Nazwa lokalu *
+          </label>
+
+          <input
+            id="locationName"
+            name="locationName"
+            type="text"
+            maxlength="128"
+            [(ngModel)]="name"
+          />
+
+          <span class="field-hint">
+            {{ name.length }}/128
+          </span>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label for="city">Miasto *</label>
+
+            <input
+              id="city"
+              name="city"
+              type="text"
+              maxlength="128"
+              [(ngModel)]="city"
+            />
+          </div>
+
+          <div class="form-field">
+            <label for="postalCode">
+              Kod pocztowy *
+            </label>
+
+            <input
+              id="postalCode"
+              name="postalCode"
+              type="text"
+              maxlength="16"
+              [(ngModel)]="postalCode"
+            />
+          </div>
+        </div>
+
+        <div class="form-row street-row">
+          <div class="form-field">
+            <label for="street">Ulica *</label>
+
+            <input
+              id="street"
+              name="street"
+              type="text"
+              maxlength="128"
+              [(ngModel)]="street"
+            />
+          </div>
+
+          <div class="form-field">
+            <label for="buildingNumber">
+              Numer budynku *
+            </label>
+
+            <input
+              id="buildingNumber"
+              name="buildingNumber"
+              type="text"
+              maxlength="32"
+              [(ngModel)]="buildingNumber"
+            />
+          </div>
+        </div>
+
+        @if (errorMessage()) {
+          <div class="message-box error-box">
+            {{ errorMessage() }}
+          </div>
+        }
+
+        @if (successMessage()) {
+          <div class="message-box success-box">
+            {{ successMessage() }}
+          </div>
+        }
+
+        <div class="form-actions">
+          <button
+            class="btn btn-primary"
+            type="submit"
+            [disabled]="saving()"
+          >
+            {{
+              saving()
+                ? 'Zapisywanie...'
+                : 'Zapisz zmiany'
+            }}
+          </button>
+
+          <a
+            class="btn btn-secondary"
+            [routerLink]="listLink()"
+          >
+            Anuluj
+          </a>
+        </div>
+      </form>
+    </div>
+  }
+</section>

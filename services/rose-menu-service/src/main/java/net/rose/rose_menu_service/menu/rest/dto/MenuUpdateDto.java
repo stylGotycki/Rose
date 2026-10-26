@@ -1,0 +1,14 @@
+package net.rose.rose_menu_service.menu.rest.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+public record MenuUpdateDto(
+        @NotBlank
+        @Size(max = 128)
+        String name,
+
+        @Size(max = 1000)
+        String description
+) {
+}

@@ -1,0 +1,145 @@
+.category-form-page {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.back-link {
+  display: inline-flex;
+  margin-bottom: 28px;
+
+  color: var(--primary-color);
+  font-weight: 800;
+}
+
+.form-layout {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 0.82fr)
+    minmax(0, 1.18fr);
+  gap: 48px;
+  align-items: start;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+
+  color: var(--primary-color);
+
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.category-information {
+  display: grid;
+  gap: 7px;
+
+  margin-top: 30px;
+  padding: 22px;
+
+  border-radius: 18px;
+  background: #eadfe2;
+}
+
+.category-information span {
+  margin-top: 8px;
+
+  color: var(--muted-color);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.category-information span:first-child {
+  margin-top: 0;
+}
+
+.category-information strong {
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+
+.category-form {
+  padding: 32px;
+}
+
+.field-hint {
+  color: var(--muted-color);
+  font-size: 12px;
+  text-align: right;
+}
+
+.message-box {
+  padding: 14px 16px;
+
+  border-radius: 12px;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.error-box {
+  border: 1px solid rgba(179, 38, 30, 0.24);
+  background: rgba(179, 38, 30, 0.08);
+  color: var(--danger-color);
+}
+
+.loading-state,
+.fatal-error,
+.readonly-card {
+  min-height: 300px;
+
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 16px;
+
+  text-align: center;
+}
+
+.loading-state p,
+.fatal-error p,
+.readonly-card p {
+  max-width: 500px;
+  margin: 0;
+
+  color: var(--muted-color);
+  line-height: 1.6;
+}
+
+.fatal-error h1,
+.readonly-card h2 {
+  margin: 0;
+
+  font-family: var(--montserrat-alt);
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+
+  border: 4px solid #eadfe2;
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+
+  animation: category-edit-loading 0.8s linear infinite;
+}
+
+@keyframes category-edit-loading {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 900px) {
+  .form-layout {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+}
+
+@media (max-width: 560px) {
+  .form-actions .btn {
+    width: 100%;
+  }
+}

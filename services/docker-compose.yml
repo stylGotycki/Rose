@@ -1,0 +1,429 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: rose-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: rose
+      RABBITMQ_DEFAULT_PASS: rose
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - rose-network
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    container_name: rose-mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - rose-network
+
+  identity-db:
+    image: postgres:16-alpine
+    container_name: rose-identity-db
+    environment:
+      POSTGRES_DB: rose_identity
+      POSTGRES_USER: rose
+      POSTGRES_PASSWORD: rose
+    volumes:
+      - identity-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rose -d rose_identity"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - rose-network
+
+  access-db:
+    image: postgres:16-alpine
+    container_name: rose-access-db
+    environment:
+      POSTGRES_DB: rose_access
+      POSTGRES_USER: rose
+      POSTGRES_PASSWORD: rose
+    volumes:
+      - access-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rose -d rose_access"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - rose-network
+
+  organization-db:
+    image: postgres:16-alpine
+    container_name: rose-organization-db
+    environment:
+      POSTGRES_DB: rose_organization
+      POSTGRES_USER: rose
+      POSTGRES_PASSWORD: rose
+    volumes:
+      - organization-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rose -d rose_organization"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - rose-network
+
+  workforce-db:
+    image: postgres:16-alpine
+    container_name: rose-workforce-db
+    environment:
+      POSTGRES_DB: rose_workforce
+      POSTGRES_USER: rose
+      POSTGRES_PASSWORD: rose
+    volumes:
+      - workforce-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rose -d rose_workforce"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - rose-network
+
+  menu-db:
+    image: postgres:16-alpine
+    container_name: rose-menu-db
+    environment:
+      POSTGRES_DB: rose_menu
+      POSTGRES_USER: rose
+      POSTGRES_PASSWORD: rose
+    volumes:
+      - menu-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rose -d rose_menu"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - rose-network
+
+  order-db:
+    image: postgres:16-alpine
+    container_name: rose-order-db
+    environment:
+      POSTGRES_DB: rose_order
+      POSTGRES_USER: rose
+      POSTGRES_PASSWORD: rose
+    volumes:
+      - order-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rose -d rose_order"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - rose-network
+
+  billing-db:
+    image: postgres:16-alpine
+    container_name: rose-billing-db
+    environment:
+      POSTGRES_DB: rose_billing
+      POSTGRES_USER: rose
+      POSTGRES_PASSWORD: rose
+    volumes:
+      - billing-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rose -d rose_billing"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - rose-network
+
+  identity-service:
+    build:
+      context: ./rose-identity-service
+      dockerfile: Dockerfile
+    container_name: rose-identity-service
+    ports:
+      - "8081:8080"
+    environment:
+      SERVER_PORT: 8080
+      DATABASE_URL: jdbc:postgresql://identity-db:5432/rose_identity
+      DATABASE_DRIVER: org.postgresql.Driver
+      DATABASE_USERNAME: rose
+      DATABASE_PASSWORD: rose
+      H2_CONSOLE_ENABLED: "false"
+      JWT_SECRET: rose-production-like-development-secret-key-that-is-long-enough-2026
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: rose
+      RABBITMQ_PASSWORD: rose
+      MAIL_HOST: mailhog
+      MAIL_PORT: "1025"
+      MAIL_FROM: no-reply@rose.local
+      VERIFICATION_BASE_URL: http://localhost:4200
+    depends_on:
+      identity-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - rose-network
+
+  access-service:
+    build:
+      context: ./rose-access-service
+      dockerfile: Dockerfile
+    container_name: rose-access-service
+    ports:
+      - "8082:8080"
+    environment:
+      SERVER_PORT: 8080
+      IDENTITY_SERVICE_URL: http://identity-service:8080
+      DATABASE_URL: jdbc:postgresql://access-db:5432/rose_access
+      DATABASE_DRIVER: org.postgresql.Driver
+      DATABASE_USERNAME: rose
+      DATABASE_PASSWORD: rose
+      H2_CONSOLE_ENABLED: "false"
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: rose
+      RABBITMQ_PASSWORD: rose
+    depends_on:
+      access-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      identity-service:
+        condition: service_started
+    networks:
+      - rose-network
+
+  organization-service:
+    build:
+      context: ./rose-organization-service
+      dockerfile: Dockerfile
+    container_name: rose-organization-service
+    ports:
+      - "8083:8080"
+    environment:
+      SERVER_PORT: 8080
+      IDENTITY_SERVICE_URL: http://identity-service:8080
+      DATABASE_URL: jdbc:postgresql://organization-db:5432/rose_organization
+      DATABASE_DRIVER: org.postgresql.Driver
+      DATABASE_USERNAME: rose
+      DATABASE_PASSWORD: rose
+      H2_CONSOLE_ENABLED: "false"
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: rose
+      RABBITMQ_PASSWORD: rose
+    depends_on:
+      organization-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      identity-service:
+        condition: service_started
+      access-service:
+        condition: service_started
+    networks:
+      - rose-network
+
+  workforce-service:
+    build:
+      context: ./rose-workforce-service
+      dockerfile: Dockerfile
+    container_name: rose-workforce-service
+    ports:
+      - "8084:8080"
+    environment:
+      SERVER_PORT: 8080
+      IDENTITY_SERVICE_URL: http://identity-service:8080
+      DATABASE_URL: jdbc:postgresql://workforce-db:5432/rose_workforce
+      DATABASE_DRIVER: org.postgresql.Driver
+      DATABASE_USERNAME: rose
+      DATABASE_PASSWORD: rose
+      H2_CONSOLE_ENABLED: "false"
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: rose
+      RABBITMQ_PASSWORD: rose
+    depends_on:
+      workforce-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      identity-service:
+        condition: service_started
+      access-service:
+        condition: service_started
+    networks:
+      - rose-network
+
+  menu-service:
+    build:
+      context: ./rose-menu-service
+      dockerfile: Dockerfile
+    container_name: rose-menu-service
+    ports:
+      - "8085:8080"
+    environment:
+      SERVER_PORT: 8080
+      IDENTITY_SERVICE_URL: http://identity-service:8080
+      DATABASE_URL: jdbc:postgresql://menu-db:5432/rose_menu
+      DATABASE_DRIVER: org.postgresql.Driver
+      DATABASE_USERNAME: rose
+      DATABASE_PASSWORD: rose
+      H2_CONSOLE_ENABLED: "false"
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: rose
+      RABBITMQ_PASSWORD: rose
+    depends_on:
+      menu-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      identity-service:
+        condition: service_started
+      access-service:
+        condition: service_started
+    networks:
+      - rose-network
+
+  order-service:
+    build:
+      context: ./rose-order-service
+      dockerfile: Dockerfile
+    container_name: rose-order-service
+    ports:
+      - "8086:8080"
+    environment:
+      SERVER_PORT: 8080
+      IDENTITY_SERVICE_URL: http://identity-service:8080
+      DATABASE_URL: jdbc:postgresql://order-db:5432/rose_order
+      DATABASE_DRIVER: org.postgresql.Driver
+      DATABASE_USERNAME: rose
+      DATABASE_PASSWORD: rose
+      H2_CONSOLE_ENABLED: "false"
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: rose
+      RABBITMQ_PASSWORD: rose
+    depends_on:
+      order-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      identity-service:
+        condition: service_started
+      access-service:
+        condition: service_started
+      menu-service:
+        condition: service_started
+    networks:
+      - rose-network
+
+  billing-service:
+    build:
+      context: ./rose-billing-service
+      dockerfile: Dockerfile
+    container_name: rose-billing-service
+    ports:
+      - "8087:8080"
+    environment:
+      SERVER_PORT: 8080
+      IDENTITY_SERVICE_URL: http://identity-service:8080
+      DATABASE_URL: jdbc:postgresql://billing-db:5432/rose_billing
+      DATABASE_DRIVER: org.postgresql.Driver
+      DATABASE_USERNAME: rose
+      DATABASE_PASSWORD: rose
+      H2_CONSOLE_ENABLED: "false"
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: rose
+      RABBITMQ_PASSWORD: rose
+    depends_on:
+      billing-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      identity-service:
+        condition: service_started
+      access-service:
+        condition: service_started
+      order-service:
+        condition: service_started
+    networks:
+      - rose-network
+
+  gateway-service:
+    build:
+      context: ./rose-gateway-service
+      dockerfile: Dockerfile
+    container_name: rose-gateway-service
+    ports:
+      - "9090:8080"
+    environment:
+      SERVER_PORT: 8080
+      IDENTITY_SERVICE_URL: http://identity-service:8080
+      ACCESS_SERVICE_URL: http://access-service:8080
+      ORGANIZATION_SERVICE_URL: http://organization-service:8080
+      WORKFORCE_SERVICE_URL: http://workforce-service:8080
+      MENU_SERVICE_URL: http://menu-service:8080
+      ORDER_SERVICE_URL: http://order-service:8080
+      BILLING_SERVICE_URL: http://billing-service:8080
+    depends_on:
+      identity-service:
+        condition: service_started
+      access-service:
+        condition: service_started
+      organization-service:
+        condition: service_started
+      workforce-service:
+        condition: service_started
+      menu-service:
+        condition: service_started
+      order-service:
+        condition: service_started
+      billing-service:
+        condition: service_started
+    networks:
+      - rose-network
+
+  frontend:
+    build:
+      context: ../views/rose-frontend
+      dockerfile: Dockerfile
+    container_name: rose-frontend
+    ports:
+      - "4200:4200"
+    volumes:
+      - ../views/rose-frontend:/app
+      - frontend-node-modules:/app/node_modules
+    depends_on:
+      gateway-service:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - rose-network
+
+networks:
+  rose-network:
+    driver: bridge
+
+volumes:
+  identity-db-data:
+  access-db-data:
+  organization-db-data:
+  workforce-db-data:
+  menu-db-data:
+  order-db-data:
+  billing-db-data:
+  frontend-node-modules:

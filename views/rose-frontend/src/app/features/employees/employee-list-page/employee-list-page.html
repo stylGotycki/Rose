@@ -1,0 +1,266 @@
+<section class="page employees-page">
+  <header class="employees-header">
+    <div>
+      <p class="eyebrow">Pracownicy</p>
+
+      <h1 class="page-title">
+        Zespół restauracji
+      </h1>
+
+      <p class="page-subtitle">
+        Zarządzaj pracownikami restauracji
+        {{ restaurantContext.restaurantName() }}.
+      </p>
+    </div>
+
+    <a
+      class="btn btn-primary"
+      [routerLink]="createLink()"
+    >
+      Dodaj pracownika
+    </a>
+  </header>
+
+  @if (successMessage()) {
+    <div class="message-box success-box">
+      {{ successMessage() }}
+    </div>
+  }
+
+  @if (errorMessage()) {
+    <div class="message-box error-box">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="card loading-state">
+      <div class="loading-spinner"></div>
+      <p>Pobieranie pracowników...</p>
+    </div>
+  } @else if (activeEmployees().length === 0) {
+    <div class="empty-state">
+      <img
+        class="empty-logo"
+        src="/assets/logo.png"
+        alt="ROSE"
+      />
+
+      <h2>Brak aktywnych pracowników</h2>
+
+      <p>
+        Dodaj pierwszego pracownika, aby rozpocząć
+        zarządzanie zespołem i grafikiem.
+      </p>
+
+      <a
+        class="btn btn-primary"
+        [routerLink]="createLink()"
+      >
+        Dodaj pierwszego pracownika
+      </a>
+    </div>
+  } @else {
+    <div class="card employees-table-card">
+      <div class="table-wrapper">
+        <table class="table employees-table">
+          <thead>
+            <tr>
+              <th>Pracownik</th>
+              <th>Kontakt</th>
+              <th>Rola</th>
+              <th>Status</th>
+              <th>Dodano</th>
+              <th class="actions-column">Akcje</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (
+              employee of activeEmployees();
+              track employee.id
+            ) {
+              <tr>
+                <td>
+                  <div class="employee-cell">
+                    <div class="employee-avatar">
+                      {{ initials(employee) }}
+                    </div>
+
+                    <div>
+                      <strong>
+                        {{ employee.firstName }}
+                        {{ employee.lastName }}
+                      </strong>
+
+                      @if (employee.userId) {
+                        <small>
+                          Konto: {{ employee.userId }}
+                        </small>
+                      } @else {
+                        <small>
+                          Brak powiązanego konta
+                        </small>
+                      }
+                    </div>
+                  </div>
+                </td>
+
+                <td>
+                  <div class="contact-cell">
+                    <span>{{ employee.email }}</span>
+
+                    <small>
+                      {{ employee.phone || 'Brak telefonu' }}
+                    </small>
+                  </div>
+                </td>
+
+                <td>
+                  <span
+                    class="role-badge"
+                    [class.owner-role]="employee.role === 'OWNER'"
+                    [class.manager-role]="employee.role === 'MANAGER'"
+                  >
+                    {{ roleLabel(employee.role) }}
+                  </span>
+                </td>
+
+                <td>
+                  <span class="badge">
+                    Aktywny
+                  </span>
+                </td>
+
+                <td>
+                  {{
+                    employee.createdAt
+                      | date: 'dd.MM.yyyy'
+                  }}
+                </td>
+
+                <td>
+                  <div class="row-actions">
+                    <a
+                      class="btn btn-secondary btn-small"
+                      [routerLink]="editLink(employee.id)"
+                    >
+                      Edytuj
+                    </a>
+
+                    <button
+                      class="btn btn-outline-danger btn-small"
+                      type="button"
+                      (click)="showArchiveConfirmation(employee)"
+                    >
+                      Archiwizuj
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  @if (archivedEmployees().length > 0) {
+    <section class="archived-section">
+      <header>
+        <h2>Archiwalni pracownicy</h2>
+
+        <span>
+          {{ archivedEmployees().length }}
+        </span>
+      </header>
+
+      <div class="archived-list">
+        @for (
+          employee of archivedEmployees();
+          track employee.id
+        ) {
+          <article class="archived-item">
+            <div class="archived-person">
+              <div class="employee-avatar archived-avatar">
+                {{ initials(employee) }}
+              </div>
+
+              <div>
+                <strong>
+                  {{ employee.firstName }}
+                  {{ employee.lastName }}
+                </strong>
+
+                <p>
+                  {{ roleLabel(employee.role) }}
+                  · {{ employee.email }}
+                </p>
+              </div>
+            </div>
+
+            <span class="badge archived-badge">
+              Archiwalny
+            </span>
+          </article>
+        }
+      </div>
+    </section>
+  }
+</section>
+
+@if (employeeToArchive(); as employee) {
+  <div
+    class="modal-backdrop"
+    (click)="hideArchiveConfirmation()"
+  >
+    <section
+      class="confirmation-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="archive-employee-title"
+      (click)="$event.stopPropagation()"
+    >
+      <p class="danger-label">
+        Potwierdzenie operacji
+      </p>
+
+      <h2 id="archive-employee-title">
+        Zarchiwizować pracownika?
+      </h2>
+
+      <p>
+        Pracownik
+        <strong>
+          {{ employee.firstName }}
+          {{ employee.lastName }}
+        </strong>
+        zostanie przeniesiony do archiwum.
+      </p>
+
+      <div class="modal-actions">
+        <button
+          class="btn btn-danger"
+          type="button"
+          [disabled]="archivingId() === employee.id"
+          (click)="archiveEmployee()"
+        >
+          {{
+            archivingId() === employee.id
+              ? 'Archiwizowanie...'
+              : 'Tak, archiwizuj'
+          }}
+        </button>
+
+        <button
+          class="btn btn-secondary"
+          type="button"
+          [disabled]="archivingId() === employee.id"
+          (click)="hideArchiveConfirmation()"
+        >
+          Anuluj
+        </button>
+      </div>
+    </section>
+  </div>
+}

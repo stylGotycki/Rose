@@ -1,0 +1,39 @@
+<header class="app-navbar">
+  <a class="brand" routerLink="/app/restaurants">
+    <img
+      src="/assets/logo.png"
+      alt="ROSE logo"
+      class="brand-logo"
+    />
+
+    <span class="brand-name">ROSE</span>
+  </a>
+
+  <nav class="nav-actions">
+    <a routerLink="/">
+      Strona główna
+    </a>
+
+    <a routerLink="/app/restaurants">
+      Restauracje
+    </a>
+
+    @if (auth.currentUser(); as user) {
+      <div class="app-user">
+        <span class="app-user-avatar">
+          {{ auth.userInitial() }}
+        </span>
+
+        <span>Witaj, {{ user.firstName }}</span>
+      </div>
+    }
+
+    <button
+      class="btn btn-secondary"
+      type="button"
+      (click)="logout()"
+    >
+      Wyloguj
+    </button>
+  </nav>
+</header>

@@ -1,0 +1,681 @@
+<section class="page menu-details-page">
+  <a
+    class="back-link"
+    [routerLink]="listLink()"
+  >
+    ← Wróć do listy menu
+  </a>
+
+  @if (loading()) {
+    <div class="card loading-state">
+      <div class="loading-spinner"></div>
+
+      <p>Pobieranie zawartości menu...</p>
+    </div>
+  } @else if (!menu()) {
+    <div class="card fatal-error">
+      <h1>Nie udało się otworzyć menu</h1>
+
+      <p>
+        {{ errorMessage() }}
+      </p>
+
+      <a
+        class="btn btn-primary"
+        [routerLink]="listLink()"
+      >
+        Wróć do listy menu
+      </a>
+    </div>
+  } @else if (menu(); as currentMenu) {
+    <header class="details-header">
+      <div>
+        <div class="title-line">
+          <p class="eyebrow">
+            Zawartość menu
+          </p>
+
+          <span
+            class="status-badge"
+            [class.status-active]="
+              currentMenu.status === 'ACTIVE'
+            "
+            [class.status-draft]="
+              currentMenu.status === 'DRAFT'
+            "
+            [class.status-archived]="
+              currentMenu.status === 'ARCHIVED'
+            "
+          >
+            {{ menuStatusLabel(currentMenu.status) }}
+          </span>
+        </div>
+
+        <h1 class="page-title">
+          {{ currentMenu.name }}
+        </h1>
+
+        <p class="page-subtitle">
+          {{
+            currentMenu.description ||
+            'Menu nie posiada opisu.'
+          }}
+        </p>
+      </div>
+
+      <div class="header-actions">
+        @if (canManageMenu()) {
+          <a
+            class="btn btn-primary"
+            [routerLink]="createCategoryLink()"
+          >
+            Dodaj kategorię
+          </a>
+
+          <a
+            class="btn btn-secondary"
+            [routerLink]="editMenuLink()"
+          >
+            Edytuj dane menu
+          </a>
+        }
+      </div>
+    </header>
+
+    @if (successMessage()) {
+      <div class="message-box success-box">
+        {{ successMessage() }}
+      </div>
+    }
+
+    @if (errorMessage()) {
+      <div class="message-box error-box">
+        {{ errorMessage() }}
+      </div>
+    }
+
+    @if (!canManageMenu()) {
+      <div class="readonly-message">
+        To menu jest archiwalne. Zawartość jest dostępna
+        wyłącznie do odczytu.
+      </div>
+    }
+
+    <section class="menu-summary">
+      <article>
+        <span>Aktywne kategorie</span>
+
+        <strong>
+          {{ activeCategories().length }}
+        </strong>
+      </article>
+
+      <article>
+        <span>Aktywne pozycje</span>
+
+        <strong>
+          {{ activeItemCount() }}
+        </strong>
+      </article>
+
+      <article>
+        <span>Dostępne pozycje</span>
+
+        <strong>
+          {{ availableItemCount() }}
+        </strong>
+      </article>
+
+      <article>
+        <span>Archiwalne pozycje</span>
+
+        <strong>
+          {{ archivedItemCount() }}
+        </strong>
+      </article>
+    </section>
+
+    <section class="category-section">
+      <div class="section-heading">
+        <div>
+          <p class="section-label">
+            Struktura menu
+          </p>
+
+          <h2>Kategorie i pozycje</h2>
+
+          <p>
+            Pozycje menu są pogrupowane według kategorii.
+          </p>
+        </div>
+
+        @if (canManageMenu()) {
+          <a
+            class="btn btn-primary"
+            [routerLink]="createCategoryLink()"
+          >
+            Dodaj kategorię
+          </a>
+        }
+      </div>
+
+      @if (activeCategories().length === 0) {
+        <div class="empty-categories">
+          <h3>Brak kategorii</h3>
+
+          <p>
+            Utwórz pierwszą kategorię, aby zacząć
+            dodawać pozycje menu.
+          </p>
+
+          @if (canManageMenu()) {
+            <a
+              class="btn btn-primary"
+              [routerLink]="createCategoryLink()"
+            >
+              Utwórz pierwszą kategorię
+            </a>
+          }
+        </div>
+      } @else {
+        <div class="category-list">
+          @for (
+            category of activeCategories();
+            track category.id
+          ) {
+            <article class="category-card">
+              <header class="category-header">
+                <div class="category-title">
+                  <div class="order-badge">
+                    {{ category.displayOrder }}
+                  </div>
+
+                  <div>
+                    <span class="category-label">
+                      Kategoria
+                    </span>
+
+                    <h3>{{ category.name }}</h3>
+                  </div>
+                </div>
+
+                <div class="category-header-actions">
+                  <span class="category-status active-category-status">
+                    {{
+                      categoryStatusLabel(
+                        category.status
+                      )
+                    }}
+                  </span>
+
+                  @if (
+                    canManageCategory(category)
+                  ) {
+                    <a
+                      class="btn btn-primary btn-small"
+                      [routerLink]="
+                        createItemLink(category.id)
+                      "
+                    >
+                      Dodaj pozycję
+                    </a>
+
+                    <a
+                      class="btn btn-secondary btn-small"
+                      [routerLink]="
+                        editCategoryLink(category.id)
+                      "
+                    >
+                      Edytuj kategorię
+                    </a>
+
+                    <button
+                      class="btn btn-outline-danger btn-small"
+                      type="button"
+                      (click)="
+                        openArchiveCategory(category)
+                      "
+                    >
+                      Archiwizuj
+                    </button>
+                  }
+                </div>
+              </header>
+
+              <div class="category-meta">
+                <span>
+                  Kolejność:
+                  <strong>
+                    {{ category.displayOrder }}
+                  </strong>
+                </span>
+
+                <span>
+                  Aktywne pozycje:
+                  <strong>
+                    {{
+                      activeItemsForCategory(
+                        category.id
+                      ).length
+                    }}
+                  </strong>
+                </span>
+
+                <span>
+                  Archiwalne:
+                  <strong>
+                    {{
+                      archivedItemsForCategory(
+                        category.id
+                      ).length
+                    }}
+                  </strong>
+                </span>
+              </div>
+
+              @if (
+                activeItemsForCategory(
+                  category.id
+                ).length === 0
+              ) {
+                <div class="empty-items">
+                  <div>
+                    <strong>
+                      Brak aktywnych pozycji
+                    </strong>
+
+                    <p>
+                      Dodaj pierwsze danie, napój
+                      lub inną pozycję do tej kategorii.
+                    </p>
+                  </div>
+
+                  @if (
+                    canManageCategory(category)
+                  ) {
+                    <a
+                      class="btn btn-secondary"
+                      [routerLink]="
+                        createItemLink(category.id)
+                      "
+                    >
+                      Dodaj pozycję
+                    </a>
+                  }
+                </div>
+              } @else {
+                <div class="item-grid">
+                  @for (
+                    item of activeItemsForCategory(
+                      category.id
+                    );
+                    track item.id
+                  ) {
+                    <article
+                      class="item-card"
+                      [class.unavailable-item]="
+                        !item.available
+                      "
+                    >
+                      <div class="item-card-header">
+                        <div>
+                          <span
+                            class="availability-badge"
+                            [class.available-badge]="
+                              item.available
+                            "
+                            [class.unavailable-badge]="
+                              !item.available
+                            "
+                          >
+                            {{
+                              item.available
+                                ? 'Dostępna'
+                                : 'Niedostępna'
+                            }}
+                          </span>
+
+                          <h4>{{ item.name }}</h4>
+                        </div>
+
+                        <div class="item-price">
+                          {{
+                            item.price
+                              | number: '1.2-2'
+                          }}
+                          <span>
+                            {{ item.currency }}
+                          </span>
+                        </div>
+                      </div>
+
+                      <p class="item-description">
+                        {{
+                          item.description ||
+                          'Brak opisu pozycji.'
+                        }}
+                      </p>
+
+                      <footer class="item-card-footer">
+                        <div class="item-details">
+                          <span>
+                            Aktualizacja:
+                            {{
+                              item.updatedAt
+                                | date: 'dd.MM.yyyy'
+                            }}
+                          </span>
+                        </div>
+
+                        @if (
+                          canManageCategory(category)
+                        ) {
+                          <div class="item-actions">
+                            <a
+                              class="btn btn-secondary btn-small"
+                              [routerLink]="
+                                editItemLink(
+                                  category.id,
+                                  item.id
+                                )
+                              "
+                            >
+                              Edytuj
+                            </a>
+
+                            <button
+                              class="btn btn-outline-danger btn-small"
+                              type="button"
+                              (click)="
+                                openArchiveItem(item)
+                              "
+                            >
+                              Archiwizuj
+                            </button>
+                          </div>
+                        }
+                      </footer>
+                    </article>
+                  }
+                </div>
+              }
+
+              @if (
+                archivedItemsForCategory(
+                  category.id
+                ).length > 0
+              ) {
+                <details class="archived-items">
+                  <summary>
+                    Archiwalne pozycje
+                    <span>
+                      {{
+                        archivedItemsForCategory(
+                          category.id
+                        ).length
+                      }}
+                    </span>
+                  </summary>
+
+                  <div class="archived-item-list">
+                    @for (
+                      item of archivedItemsForCategory(
+                        category.id
+                      );
+                      track item.id
+                    ) {
+                      <article class="archived-item-row">
+                        <div>
+                          <strong>
+                            {{ item.name }}
+                          </strong>
+
+                          <p>
+                            {{
+                              item.description ||
+                              'Brak opisu pozycji.'
+                            }}
+                          </p>
+                        </div>
+
+                        <div class="archived-item-meta">
+                          <span>
+                            {{
+                              item.price
+                                | number: '1.2-2'
+                            }}
+                            {{ item.currency }}
+                          </span>
+
+                          <span class="item-status archived-item-status">
+                            {{
+                              itemStatusLabel(
+                                item.status
+                              )
+                            }}
+                          </span>
+                        </div>
+                      </article>
+                    }
+                  </div>
+                </details>
+              }
+            </article>
+          }
+        </div>
+      }
+    </section>
+
+    @if (archivedCategories().length > 0) {
+      <section class="category-section archived-section">
+        <div class="section-heading">
+          <div>
+            <p class="section-label">
+              Historia
+            </p>
+
+            <h2>Archiwalne kategorie</h2>
+          </div>
+        </div>
+
+        <div class="archived-category-list">
+          @for (
+            category of archivedCategories();
+            track category.id
+          ) {
+            <article class="archived-category">
+              <header>
+                <div>
+                  <h3>{{ category.name }}</h3>
+
+                  <span>
+                    Kolejność:
+                    {{ category.displayOrder }}
+                  </span>
+                </div>
+
+                <span class="category-status archived-category-status">
+                  {{
+                    categoryStatusLabel(
+                      category.status
+                    )
+                  }}
+                </span>
+              </header>
+
+              @if (
+                allItemsForCategory(
+                  category.id
+                ).length === 0
+              ) {
+                <p class="archived-category-empty">
+                  Brak zapisanych pozycji.
+                </p>
+              } @else {
+                <div class="archived-category-items">
+                  @for (
+                    item of allItemsForCategory(
+                      category.id
+                    );
+                    track item.id
+                  ) {
+                    <div>
+                      <span>
+                        {{ item.name }}
+                      </span>
+
+                      <strong>
+                        {{
+                          item.price
+                            | number: '1.2-2'
+                        }}
+                        {{ item.currency }}
+                      </strong>
+                    </div>
+                  }
+                </div>
+              }
+            </article>
+          }
+        </div>
+      </section>
+    }
+  }
+</section>
+
+@if (categoryToArchive(); as category) {
+  <div
+    class="modal-backdrop"
+    (click)="closeArchiveCategory()"
+  >
+    <section
+      class="confirmation-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="archive-category-title"
+      (click)="$event.stopPropagation()"
+    >
+      <p class="modal-label">
+        Archiwizacja kategorii
+      </p>
+
+      <h2 id="archive-category-title">
+        Zarchiwizować kategorię?
+      </h2>
+
+      <p>
+        Kategoria
+        <strong>
+          „{{ category.name }}”
+        </strong>
+        zostanie usunięta z aktywnej struktury menu.
+      </p>
+
+      @if (
+        activeItemsForCategory(
+          category.id
+        ).length > 0
+      ) {
+        <div class="modal-warning">
+          Kategoria zawiera
+          <strong>
+            {{
+              activeItemsForCategory(
+                category.id
+              ).length
+            }}
+          </strong>
+          aktywnych pozycji. Backend może wymagać
+          ich wcześniejszego zarchiwizowania.
+        </div>
+      }
+
+      <div class="modal-actions">
+        <button
+          class="btn btn-danger"
+          type="button"
+          [disabled]="
+            processingEntityId() === category.id
+          "
+          (click)="confirmArchiveCategory()"
+        >
+          {{
+            processingEntityId() === category.id
+              ? 'Archiwizowanie...'
+              : 'Tak, archiwizuj'
+          }}
+        </button>
+
+        <button
+          class="btn btn-secondary"
+          type="button"
+          [disabled]="
+            processingEntityId() === category.id
+          "
+          (click)="closeArchiveCategory()"
+        >
+          Wróć
+        </button>
+      </div>
+    </section>
+  </div>
+}
+
+@if (itemToArchive(); as item) {
+  <div
+    class="modal-backdrop"
+    (click)="closeArchiveItem()"
+  >
+    <section
+      class="confirmation-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="archive-item-title"
+      (click)="$event.stopPropagation()"
+    >
+      <p class="modal-label">
+        Archiwizacja pozycji
+      </p>
+
+      <h2 id="archive-item-title">
+        Zarchiwizować pozycję?
+      </h2>
+
+      <p>
+        Pozycja
+        <strong>
+          „{{ item.name }}”
+        </strong>
+        nie będzie już dostępna w aktywnym menu.
+      </p>
+
+      <div class="modal-actions">
+        <button
+          class="btn btn-danger"
+          type="button"
+          [disabled]="
+            processingEntityId() === item.id
+          "
+          (click)="confirmArchiveItem()"
+        >
+          {{
+            processingEntityId() === item.id
+              ? 'Archiwizowanie...'
+              : 'Tak, archiwizuj'
+          }}
+        </button>
+
+        <button
+          class="btn btn-secondary"
+          type="button"
+          [disabled]="
+            processingEntityId() === item.id
+          "
+          (click)="closeArchiveItem()"
+        >
+          Wróć
+        </button>
+      </div>
+    </section>
+  </div>
+}

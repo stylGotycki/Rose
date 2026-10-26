@@ -1,0 +1,206 @@
+<section class="page employee-form-page">
+  <a
+    class="back-link"
+    [routerLink]="listLink()"
+  >
+    ← Wróć do pracowników
+  </a>
+
+  @if (loading()) {
+    <div class="card loading-state">
+      <div class="loading-spinner"></div>
+      <p>Pobieranie danych pracownika...</p>
+    </div>
+  } @else if (!employee()) {
+    <div class="card fatal-error">
+      <h1>Nie udało się otworzyć pracownika</h1>
+
+      <p class="error-message">
+        {{ errorMessage() }}
+      </p>
+
+      <a
+        class="btn btn-primary"
+        [routerLink]="listLink()"
+      >
+        Wróć do pracowników
+      </a>
+    </div>
+  } @else if (employee(); as currentEmployee) {
+    <div class="form-layout">
+      <div class="form-introduction">
+        <p class="eyebrow">
+          Edycja pracownika
+        </p>
+
+        <h1 class="page-title">
+          {{ currentEmployee.firstName }}
+          {{ currentEmployee.lastName }}
+        </h1>
+
+        <p class="page-subtitle">
+          Zaktualizuj dane kontaktowe i rolę pracownika.
+        </p>
+
+        <div class="employee-information">
+          <span>ID pracownika</span>
+          <strong>{{ currentEmployee.id }}</strong>
+
+          <span>Powiązane konto</span>
+          <strong>
+            {{ currentEmployee.userId || 'Brak powiązania' }}
+          </strong>
+        </div>
+      </div>
+
+      <form
+        class="card form employee-form"
+        (ngSubmit)="submit()"
+      >
+        <div class="form-row">
+          <div class="form-field">
+            <label for="firstName">
+              Imię *
+            </label>
+
+            <input
+              id="firstName"
+              name="firstName"
+              type="text"
+              maxlength="64"
+              [(ngModel)]="firstName"
+            />
+          </div>
+
+          <div class="form-field">
+            <label for="lastName">
+              Nazwisko *
+            </label>
+
+            <input
+              id="lastName"
+              name="lastName"
+              type="text"
+              maxlength="64"
+              [(ngModel)]="lastName"
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label for="email">
+              Email *
+            </label>
+
+            <input
+              id="email"
+              name="email"
+              type="email"
+              maxlength="128"
+              [(ngModel)]="email"
+            />
+          </div>
+
+          <div class="form-field">
+            <label for="phone">
+              Telefon
+            </label>
+
+            <input
+              id="phone"
+              name="phone"
+              type="tel"
+              maxlength="32"
+              [(ngModel)]="phone"
+            />
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="role">
+            Rola *
+          </label>
+
+          <select
+            id="role"
+            name="role"
+            [(ngModel)]="role"
+          >
+            @for (option of roles; track option.value) {
+              <option [value]="option.value">
+                {{ option.label }}
+              </option>
+            }
+          </select>
+        </div>
+
+        <section class="role-description">
+          @switch (role) {
+            @case ('OWNER') {
+              <strong>Właściciel</strong>
+              <p>
+                Pełny dostęp do zarządzania restauracją.
+              </p>
+            }
+
+            @case ('MANAGER') {
+              <strong>Menedżer</strong>
+              <p>
+                Zarządzanie zespołem, grafikiem i operacjami.
+              </p>
+            }
+
+            @case ('CHEF') {
+              <strong>Kucharz</strong>
+              <p>
+                Praca z menu, zamówieniami i panelem kuchni.
+              </p>
+            }
+
+            @case ('WAITER') {
+              <strong>Kelner</strong>
+              <p>
+                Obsługa zamówień i rachunków.
+              </p>
+            }
+
+            @default {
+              <strong>Pracownik</strong>
+              <p>
+                Podstawowa rola pracownika restauracji.
+              </p>
+            }
+          }
+        </section>
+
+        @if (errorMessage()) {
+          <div class="message-box error-box">
+            {{ errorMessage() }}
+          </div>
+        }
+
+        <div class="form-actions">
+          <button
+            class="btn btn-primary"
+            type="submit"
+            [disabled]="saving()"
+          >
+            {{
+              saving()
+                ? 'Zapisywanie...'
+                : 'Zapisz zmiany'
+            }}
+          </button>
+
+          <a
+            class="btn btn-secondary"
+            [routerLink]="listLink()"
+          >
+            Anuluj
+          </a>
+        </div>
+      </form>
+    </div>
+  }
+</section>

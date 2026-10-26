@@ -1,0 +1,158 @@
+<section class="page menu-form-page">
+  <a
+    class="back-link"
+    [routerLink]="listLink()"
+  >
+    ← Wróć do listy menu
+  </a>
+
+  @if (loading()) {
+    <div class="card loading-state">
+      <div class="loading-spinner"></div>
+
+      <p>Pobieranie danych menu...</p>
+    </div>
+  } @else if (!menu()) {
+    <div class="card fatal-error">
+      <h1>Nie udało się otworzyć menu</h1>
+
+      <p>
+        {{ errorMessage() }}
+      </p>
+
+      <a
+        class="btn btn-primary"
+        [routerLink]="listLink()"
+      >
+        Wróć do listy menu
+      </a>
+    </div>
+  } @else if (menu(); as currentMenu) {
+    <div class="form-layout">
+      <div class="form-introduction">
+        <p class="eyebrow">
+          Edycja menu
+        </p>
+
+        <h1 class="page-title">
+          Edytuj menu
+        </h1>
+
+        <p class="page-subtitle">
+          Zmień nazwę lub opis menu restauracji.
+        </p>
+
+        <div class="menu-information">
+          <span>Status</span>
+
+          <strong
+            [class.active-status]="
+              currentMenu.status === 'ACTIVE'
+            "
+            [class.draft-status]="
+              currentMenu.status === 'DRAFT'
+            "
+            [class.archived-status]="
+              currentMenu.status === 'ARCHIVED'
+            "
+          >
+            {{ statusLabel(currentMenu.status) }}
+          </strong>
+
+          <span>ID menu</span>
+
+          <strong>
+            {{ currentMenu.id }}
+          </strong>
+        </div>
+      </div>
+
+      @if (currentMenu.status === 'ARCHIVED') {
+        <section class="card archived-message">
+          <h2>Menu jest archiwalne</h2>
+
+          <p>
+            Archiwalne menu jest dostępne wyłącznie
+            do odczytu i nie można go już edytować.
+          </p>
+
+          <a
+            class="btn btn-primary"
+            [routerLink]="listLink()"
+          >
+            Wróć do listy menu
+          </a>
+        </section>
+      } @else {
+        <form
+          class="card form menu-form"
+          (ngSubmit)="submit()"
+        >
+          <div class="form-field">
+            <label for="name">
+              Nazwa menu *
+            </label>
+
+            <input
+              id="name"
+              name="name"
+              type="text"
+              maxlength="128"
+              required
+              [(ngModel)]="name"
+            />
+
+            <span class="field-hint">
+              {{ name.length }}/128
+            </span>
+          </div>
+
+          <div class="form-field">
+            <label for="description">
+              Opis
+            </label>
+
+            <textarea
+              id="description"
+              name="description"
+              rows="7"
+              maxlength="1000"
+              [(ngModel)]="description"
+            ></textarea>
+
+            <span class="field-hint">
+              {{ description.length }}/1000
+            </span>
+          </div>
+
+          @if (errorMessage()) {
+            <div class="message-box error-box">
+              {{ errorMessage() }}
+            </div>
+          }
+
+          <div class="form-actions">
+            <button
+              class="btn btn-primary"
+              type="submit"
+              [disabled]="saving()"
+            >
+              {{
+                saving()
+                  ? 'Zapisywanie...'
+                  : 'Zapisz zmiany'
+              }}
+            </button>
+
+            <a
+              class="btn btn-secondary"
+              [routerLink]="listLink()"
+            >
+              Anuluj
+            </a>
+          </div>
+        </form>
+      }
+    </div>
+  }
+</section>

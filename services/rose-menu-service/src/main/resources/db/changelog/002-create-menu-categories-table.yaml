@@ -1,0 +1,66 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-create-menu-categories-table
+      author: Filip Domaszk
+      changes:
+        - createTable:
+            tableName: menu_categories
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_menu_categories
+                    nullable: false
+
+              - column:
+                  name: menu_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: name
+                  type: VARCHAR(128)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: display_order
+                  type: INTEGER
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: status
+                  type: VARCHAR(32)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP WITH TIME ZONE
+
+        - addForeignKeyConstraint:
+            baseTableName: menu_categories
+            baseColumnNames: menu_id
+            referencedTableName: menus
+            referencedColumnNames: id
+            constraintName: fk_menu_categories_menu
+            onDelete: CASCADE
+
+        - createIndex:
+            tableName: menu_categories
+            indexName: idx_menu_categories_menu_status
+            columns:
+              - column:
+                  name: menu_id
+              - column:
+                  name: status

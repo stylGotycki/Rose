@@ -1,0 +1,439 @@
+<section class="page kitchen-page">
+  <header class="kitchen-header">
+    <div>
+      <p class="eyebrow">
+        Realizacja zamówień
+      </p>
+
+      <h1 class="page-title">
+        Kuchnia
+      </h1>
+
+      <p class="page-subtitle">
+        Obsługa pozycji zamówień restauracji
+        {{ restaurantContext.restaurantName() }}.
+      </p>
+    </div>
+
+    <div class="refresh-area">
+      <span>
+        Automatyczne odświeżanie co 15 sekund
+      </span>
+
+      <button
+        class="btn btn-secondary"
+        type="button"
+        [disabled]="
+          loading() ||
+          refreshing()
+        "
+        (click)="loadItems(false)"
+      >
+        {{
+          refreshing()
+            ? 'Odświeżanie...'
+            : 'Odśwież teraz'
+        }}
+      </button>
+    </div>
+  </header>
+
+  <section class="kitchen-summary">
+    <article>
+      <span>Aktywne zamówienia</span>
+
+      <strong>
+        {{ activeOrderCount() }}
+      </strong>
+    </article>
+
+    <article>
+      <span>Oczekujące pozycje</span>
+
+      <strong>
+        {{ pendingItems().length }}
+      </strong>
+    </article>
+
+    <article>
+      <span>W przygotowaniu</span>
+
+      <strong>
+        {{ preparationItems().length }}
+      </strong>
+    </article>
+
+    <article>
+      <span>Łączna liczba sztuk</span>
+
+      <strong>
+        {{ totalQuantity() }}
+      </strong>
+    </article>
+  </section>
+
+  @if (successMessage()) {
+    <div class="message-box success-box">
+      {{ successMessage() }}
+    </div>
+  }
+
+  @if (errorMessage()) {
+    <div class="message-box error-box">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="card loading-state">
+      <div class="loading-spinner"></div>
+
+      <p>Pobieranie pozycji kuchennych...</p>
+    </div>
+  } @else if (items().length === 0) {
+    <section class="empty-state">
+      <h2>Brak pozycji do przygotowania</h2>
+
+      <p>
+        Pozycje pojawią się tutaj po wysłaniu
+        zamówienia przez kasjera.
+      </p>
+
+      <button
+        class="btn btn-secondary"
+        type="button"
+        (click)="loadItems(false)"
+      >
+        Odśwież tablicę
+      </button>
+    </section>
+  } @else {
+    <section class="kitchen-board">
+      <article class="board-column pending-column">
+        <header class="column-header">
+          <div>
+            <span class="column-label">
+              Etap 1
+            </span>
+
+            <h2>Oczekujące</h2>
+          </div>
+
+          <strong class="column-count">
+            {{ pendingItems().length }}
+          </strong>
+        </header>
+
+        <div class="column-content">
+          @if (pendingGroups().length === 0) {
+            <div class="empty-column">
+              Brak oczekujących pozycji.
+            </div>
+          }
+
+          @for (
+            group of pendingGroups();
+            track group.orderId
+          ) {
+            <section class="order-group">
+              <header class="order-group-header">
+                <div>
+                  <span>Zamówienie</span>
+
+                  <strong>
+                    #{{ shortId(group.orderId) }}
+                  </strong>
+                </div>
+
+                <span>
+                  {{
+                    group.oldestCreatedAt
+                      | date: 'HH:mm'
+                  }}
+                </span>
+              </header>
+
+              <div class="group-items">
+                @for (
+                  item of group.items;
+                  track item.id
+                ) {
+                  <article
+                    class="kitchen-item"
+                    [class.warning-item]="
+                      isWarning(item)
+                    "
+                    [class.delayed-item]="
+                      isDelayed(item)
+                    "
+                  >
+                    <header class="item-header">
+                      <div>
+                        <span class="quantity-badge">
+                          {{ item.quantity }} ×
+                        </span>
+
+                        <h3>{{ item.name }}</h3>
+                      </div>
+
+                      <span class="age-label">
+                        {{ ageLabel(item.createdAt) }}
+                      </span>
+                    </header>
+
+                    @if (item.note) {
+                      <div class="item-note">
+                        <strong>Uwagi</strong>
+
+                        <p>{{ item.note }}</p>
+                      </div>
+                    }
+
+                    @if (isDelayed(item)) {
+                      <div class="delay-message">
+                        Pozycja oczekuje ponad 30 minut.
+                      </div>
+                    } @else if (isWarning(item)) {
+                      <div class="warning-message">
+                        Pozycja oczekuje ponad 15 minut.
+                      </div>
+                    }
+
+                    <footer class="item-footer">
+                      <span class="status-badge status-pending">
+                        {{ statusLabel(item.status) }}
+                      </span>
+
+                      <button
+                        class="btn btn-primary btn-small"
+                        type="button"
+                        [disabled]="
+                          processingItemId() === item.id
+                        "
+                        (click)="startPreparing(item)"
+                      >
+                        {{
+                          processingItemId() === item.id
+                            ? 'Zapisywanie...'
+                            : 'Rozpocznij'
+                        }}
+                      </button>
+                    </footer>
+                  </article>
+                }
+              </div>
+            </section>
+          }
+        </div>
+      </article>
+
+      <article class="board-column preparation-column">
+        <header class="column-header">
+          <div>
+            <span class="column-label">
+              Etap 2
+            </span>
+
+            <h2>W przygotowaniu</h2>
+          </div>
+
+          <strong class="column-count">
+            {{ preparationItems().length }}
+          </strong>
+        </header>
+
+        <div class="column-content">
+          @if (preparationGroups().length === 0) {
+            <div class="empty-column">
+              Żadna pozycja nie jest obecnie przygotowywana.
+            </div>
+          }
+
+          @for (
+            group of preparationGroups();
+            track group.orderId
+          ) {
+            <section class="order-group">
+              <header class="order-group-header">
+                <div>
+                  <span>Zamówienie</span>
+
+                  <strong>
+                    #{{ shortId(group.orderId) }}
+                  </strong>
+                </div>
+
+                <span>
+                  {{
+                    group.oldestCreatedAt
+                      | date: 'HH:mm'
+                  }}
+                </span>
+              </header>
+
+              <div class="group-items">
+                @for (
+                  item of group.items;
+                  track item.id
+                ) {
+                  <article
+                    class="kitchen-item"
+                    [class.warning-item]="
+                      isWarning(item)
+                    "
+                    [class.delayed-item]="
+                      isDelayed(item)
+                    "
+                  >
+                    <header class="item-header">
+                      <div>
+                        <span class="quantity-badge">
+                          {{ item.quantity }} ×
+                        </span>
+
+                        <h3>{{ item.name }}</h3>
+                      </div>
+
+                      <span class="age-label">
+                        {{ ageLabel(item.createdAt) }}
+                      </span>
+                    </header>
+
+                    @if (item.note) {
+                      <div class="item-note">
+                        <strong>Uwagi</strong>
+
+                        <p>{{ item.note }}</p>
+                      </div>
+                    }
+
+                    @if (isDelayed(item)) {
+                      <div class="delay-message">
+                        Pozycja jest realizowana ponad 30 minut.
+                      </div>
+                    } @else if (isWarning(item)) {
+                      <div class="warning-message">
+                        Od przyjęcia minęło ponad 15 minut.
+                      </div>
+                    }
+
+                    <footer class="item-footer">
+                      <span class="status-badge status-preparation">
+                        {{ statusLabel(item.status) }}
+                      </span>
+
+                      <button
+                        class="btn btn-ready btn-small"
+                        type="button"
+                        [disabled]="
+                          processingItemId() === item.id
+                        "
+                        (click)="markReady(item)"
+                      >
+                        {{
+                          processingItemId() === item.id
+                            ? 'Zapisywanie...'
+                            : 'Oznacz jako gotowe'
+                        }}
+                      </button>
+                    </footer>
+                  </article>
+                }
+              </div>
+            </section>
+          }
+        </div>
+      </article>
+
+      <article class="board-column ready-column">
+        <header class="column-header">
+          <div>
+            <span class="column-label">
+              Etap 3
+            </span>
+
+            <h2>Gotowe</h2>
+          </div>
+
+          <strong class="column-count">
+            {{ readyItems().length }}
+          </strong>
+        </header>
+
+        <div class="column-content">
+          @if (readyGroups().length === 0) {
+            <div class="empty-column">
+              Brak gotowych pozycji.
+            </div>
+          }
+
+          @for (
+            group of readyGroups();
+            track group.orderId
+          ) {
+            <section class="order-group">
+              <header class="order-group-header">
+                <div>
+                  <span>Zamówienie</span>
+
+                  <strong>
+                    #{{ shortId(group.orderId) }}
+                  </strong>
+                </div>
+
+                <span>
+                  {{
+                    group.oldestCreatedAt
+                      | date: 'HH:mm'
+                  }}
+                </span>
+              </header>
+
+              <div class="group-items">
+                @for (
+                  item of group.items;
+                  track item.id
+                ) {
+                  <article class="kitchen-item ready-item">
+                    <header class="item-header">
+                      <div>
+                        <span class="quantity-badge">
+                          {{ item.quantity }} ×
+                        </span>
+
+                        <h3>{{ item.name }}</h3>
+                      </div>
+
+                      <span class="age-label">
+                        Gotowe
+                        {{ ageLabel(item.updatedAt) }}
+                      </span>
+                    </header>
+
+                    @if (item.note) {
+                      <div class="item-note">
+                        <strong>Uwagi</strong>
+
+                        <p>{{ item.note }}</p>
+                      </div>
+                    }
+
+                    <footer class="item-footer">
+                      <span class="status-badge status-ready">
+                        {{ statusLabel(item.status) }}
+                      </span>
+
+                      <span class="waiting-for-service">
+                        Oczekuje na zakończenie zamówienia
+                      </span>
+                    </footer>
+                  </article>
+                }
+              </div>
+            </section>
+          }
+        </div>
+      </article>
+    </section>
+  }
+</section>

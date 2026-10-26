@@ -1,0 +1,161 @@
+<section class="page category-form-page">
+  @if (loading()) {
+    <div class="card loading-state">
+      <div class="loading-spinner"></div>
+
+      <p>Pobieranie kategorii...</p>
+    </div>
+  } @else if (!menu() || !category()) {
+    <div class="card fatal-error">
+      <h1>Nie udało się otworzyć kategorii</h1>
+
+      <p>
+        {{ errorMessage() }}
+      </p>
+    </div>
+  } @else if (
+    menu();
+    as currentMenu
+  ) {
+    @if (
+      category();
+      as currentCategory
+    ) {
+      <a
+        class="back-link"
+        [routerLink]="detailsLink()"
+      >
+        ← Wróć do zawartości menu
+      </a>
+
+      <div class="form-layout">
+        <div class="form-introduction">
+          <p class="eyebrow">
+            Edycja kategorii
+          </p>
+
+          <h1 class="page-title">
+            {{ currentCategory.name }}
+          </h1>
+
+          <p class="page-subtitle">
+            Menu:
+            <strong>
+              {{ currentMenu.name }}
+            </strong>
+          </p>
+
+          <div class="category-information">
+            <span>Status kategorii</span>
+
+            <strong>
+              {{
+                currentCategory.status === 'ACTIVE'
+                  ? 'Aktywna'
+                  : 'Archiwalna'
+              }}
+            </strong>
+
+            <span>ID kategorii</span>
+
+            <strong>
+              {{ currentCategory.id }}
+            </strong>
+          </div>
+        </div>
+
+        @if (
+          currentMenu.status === 'ARCHIVED' ||
+          currentCategory.status === 'ARCHIVED'
+        ) {
+          <section class="card readonly-card">
+            <h2>Kategoria jest tylko do odczytu</h2>
+
+            <p>
+              Archiwalnego menu lub archiwalnej kategorii
+              nie można już edytować.
+            </p>
+
+            <a
+              class="btn btn-primary"
+              [routerLink]="detailsLink()"
+            >
+              Wróć do menu
+            </a>
+          </section>
+        } @else {
+          <form
+            class="card form category-form"
+            (ngSubmit)="submit()"
+          >
+            <div class="form-field">
+              <label for="name">
+                Nazwa kategorii *
+              </label>
+
+              <input
+                id="name"
+                name="name"
+                type="text"
+                maxlength="128"
+                required
+                [(ngModel)]="name"
+              />
+
+              <span class="field-hint">
+                {{ name.length }}/128
+              </span>
+            </div>
+
+            <div class="form-field">
+              <label for="displayOrder">
+                Kolejność *
+              </label>
+
+              <input
+                id="displayOrder"
+                name="displayOrder"
+                type="number"
+                min="0"
+                step="1"
+                required
+                [(ngModel)]="displayOrder"
+              />
+
+              <span class="field-hint">
+                Niższa liczba oznacza wcześniejszą pozycję.
+              </span>
+            </div>
+
+            @if (errorMessage()) {
+              <div class="message-box error-box">
+                {{ errorMessage() }}
+              </div>
+            }
+
+            <div class="form-actions">
+              <button
+                class="btn btn-primary"
+                type="submit"
+                [disabled]="saving()"
+              >
+                {{
+                  saving()
+                    ? 'Zapisywanie...'
+                    : 'Zapisz zmiany'
+                }}
+              </button>
+
+              <a
+                class="btn btn-secondary"
+                [routerLink]="detailsLink()"
+              >
+                Anuluj
+              </a>
+            </div>
+          </form>
+        }
+      </div>
+    }
+  }
+</section>

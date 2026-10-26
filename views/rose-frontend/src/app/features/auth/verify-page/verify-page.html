@@ -1,0 +1,15 @@
+<section class="auth-page">
+  <div class="auth-card">
+    <h1>Weryfikacja konta</h1>
+
+    <p [class.success-message]="success()" [class.error-message]="!success() && !loading()">
+      {{ message() }}
+    </p>
+
+    @if (!loading()) {
+      <a class="btn btn-primary" routerLink="/login">
+        Przejdź do logowania
+      </a>
+    }
+  </div>
+</section>

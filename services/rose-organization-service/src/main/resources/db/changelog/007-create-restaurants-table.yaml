@@ -1,0 +1,57 @@
+databaseChangeLog:
+  - changeSet:
+      id: 007-create-restaurants-table
+      author: filip
+      changes:
+        - createTable:
+            tableName: restaurants
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: name
+                  type: varchar(128)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: description
+                  type: varchar(1024)
+
+              - column:
+                  name: tax_id
+                  type: varchar(32)
+
+              - column:
+                  name: status
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: archived_at
+                  type: timestamp
+
+        - createIndex:
+            tableName: restaurants
+            indexName: idx_restaurants_status
+            columns:
+              - column:
+                  name: status
